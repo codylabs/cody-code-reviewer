@@ -1,4 +1,4 @@
-name: "AI Code Review Tool"
+name: "Cody AI Code Reviewer - Powered by OpenAI"
 description: "Run AI code review on pull requests"
 inputs:
   pr_number:
