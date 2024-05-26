@@ -1,0 +1,7 @@
+httpx
+python-dotenv
+pytest
+PyGithub
+openai
+
+

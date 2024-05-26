@@ -1,0 +1,37 @@
+name: "AI Code Review Tool"
+description: "Run AI code review on pull requests"
+inputs:
+  pr_number:
+    description: "Pull request number"
+    required: true
+  repository:
+    description: "Repository name"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Check out repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.9"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run Code Review Model
+      run: |
+        python src/review_pull_request.py ${{ inputs.pr_number }} ${{ inputs.repository }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+    - name: Comment on Pull Request
+      run: |
+        python src/comment_on_pr.py ${{ inputs.pr_number }} "${{ secrets.GITHUB_TOKEN }}" ${{ inputs.repository }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
