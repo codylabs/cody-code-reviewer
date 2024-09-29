@@ -11,30 +11,33 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-        - name: Clone cody-code-reviewer repository
+      - name: Clone cody-code-reviewer repository
         run: |
           git clone https://github.com/codylabs/cody-code-reviewer.git
           cd cody-code-reviewer
-      
+
       - name: Set up Python 3.9
         uses: actions/setup-python@v4
         with:
           python-version: "3.9"
-      
+
       - name: Install dependencies
         run: |
+          cd cody-code-reviewer
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      
+
       - name: Run Code Review Model
         run: |
+          cd cody-code-reviewer
           python src/review_pull_request.py ${{ github.event.pull_request.number }} ${{ github.repository }} > ${{ github.workspace }}/output.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      
+
       - name: Comment on Pull Request
         run: |
+          cd cody-code-reviewer
           python src/comment_on_pr.py ${{ github.event.pull_request.number }} "${{ secrets.GITHUB_TOKEN }}" ${{ github.repository }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
