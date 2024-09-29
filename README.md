@@ -2,15 +2,15 @@
 
 Cody will automatically summarize and code review your changes on every pull request using Open AI models.
 
-Note that an Open API key is required.
+Note that an Open AI API key is required.
 
 Read more at [https://codylabs.io/](https://codylabs.io/)
 
 ## Installation
 
-Installation is as simple as adding your Open API key, and adding a Github Actions workflow file to your repo.
+Installation is as simple as adding your Open AI API key, and adding a Github Actions workflow file to your repo.
 
-1. Add OPENAI_API_KEY as a GitHub repo secret via Settings > Actions > Secrets and variables > New repository secret. The variable name should be OPENAI_API_KEY, and the value should be your Open API API Key.
+1. Add your OPENAI_API_KEY as a GitHub repo secret via Settings > Actions > Secrets and variables > New repository secret.
 
 <img src="openai.png" alt="Open API Api Key" width="500px">
 
