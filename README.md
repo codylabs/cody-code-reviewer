@@ -12,46 +12,62 @@ If you prefer you can watch these steps on YouTube:
 
 1. Add OPENAI_API_KEY as a github repo secret via Settings > Actions > Secrets and variables > New reposity secret. The variable name should be OPENAI_API_KEY and the value should be your Open API API Key.
 
-![alt text](add_a_secret_image.png)
+![Add secrets](add_a_secret_image.png)
 
 Note that GITHUB_TOKEN does not need to be added as is available by default.
 
 2. Add the following to a new folder in your repo .github/workflows/code_review.yml
 
 ```
-name: Code Review by Cody
-
-permissions:
-  contents: read
-  pull-requests: write
+name: Automated Code Review by Cody
 
 on:
   pull_request:
-  pull_request_review_comment:
-    types: [created]
-
-concurrency:
-  group: ${{ github.repository }}-${{ github.event.number || github.head_ref || github.sha }}-${{ github.workflow }}-${{ github.event_name == 'pull_request_review_comment' && 'pr_comment' || 'pr' }}
-  cancel-in-progress: ${{ github.event_name != 'pull_request_review_comment' }}
+    types: [opened, synchronize, reopened]
 
 jobs:
-  review:
+  code_review:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Use Cody AI Code Review Tool
-        uses: codylabs/cody-code-reviewer@master
+        - name: Clone cody-code-reviewer repository
+        run: |
+          git clone https://github.com/codylabs/cody-code-reviewer.git
+          cd cody-code-reviewer
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
         with:
-          pr_number: ${{ github.event.pull_request.number }}
-          repository: ${{ github.repository }}
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Code Review Model
+        run: |
+          python src/review_pull_request.py ${{ github.event.pull_request.number }} ${{ github.repository }} > ${{ github.workspace }}/output.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+      - name: Comment on Pull Request
+        run: |
+          python src/comment_on_pr.py ${{ github.event.pull_request.number }} "${{ secrets.GITHUB_TOKEN }}" ${{ github.repository }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+permissions:
+  contents: read
+  pull-requests: write
 ```
 
 3. Commit your code and watch Cody in action!
+
+![PR Code Review Image](pr_code_review.png)
 
 ## Development
 
