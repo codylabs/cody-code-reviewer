@@ -12,7 +12,7 @@ If you prefer you can watch these steps on YouTube:
 
 1. Add OPENAI_API_KEY as a github repo secret via Settings > Actions > Secrets and variables > New reposity secret. The variable name should be OPENAI_API_KEY and the value should be your Open API API Key.
 
-![alt text](add_a_secret_image.png)
+![Add secrets](add_a_secret_image.png)
 
 Note that GITHUB_TOKEN does not need to be added as is available by default.
 
@@ -32,6 +32,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+        - name: Clone cody-code-reviewer repository
+        run: |
+          git clone https://github.com/codylabs/cody-code-reviewer.git
+          cd cody-code-reviewer
+
       - name: Set up Python 3.9
         uses: actions/setup-python@v4
         with:
@@ -42,32 +47,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Clone Cody Code Reviewer Repository
-        run: |
-          git clone https://github.com/codylabs/cody-code-reviewer.git cody-code-reviewer
-
       - name: Run Code Review Model
         run: |
-          python cody-code-reviewer/src/review_pull_request.py ${{ github.event.pull_request.number }} ${{ github.repository }} > ${{ github.workspace }}/output.txt
+          python src/review_pull_request.py ${{ github.event.pull_request.number }} ${{ github.repository }} > ${{ github.workspace }}/output.txt
         env:
-          # This is provided by default, you do not need to add this this
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Update the below in your GitHub repo actions secrets to use your OpenAI API key
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          # Update the below to use the model of your choice
-          OPENAI_MODEL: "gpt-4o"
-
-      - name: Display Review Result
-        run: |
-          printf "Review result:\n%s" "${{ env.REVIEW_RESULT }}"
 
       - name: Comment on Pull Request
-        if: failure() # Runs if any of the previous steps failed
         run: |
-          python cody-code-reviewer/src/comment_on_pr.py ${{ github.event.pull_request.number }} "${{ secrets.GITHUB_TOKEN }}" ${{ github.repository }}
-
+          python src/comment_on_pr.py ${{ github.event.pull_request.number }} "${{ secrets.GITHUB_TOKEN }}" ${{ github.repository }}
         env:
-          # This is provided by default, you do not need to add this this
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 permissions:
@@ -76,6 +66,8 @@ permissions:
 ```
 
 3. Commit your code and watch Cody in action!
+
+![PR Code Review Image](pr_code_review.png)
 
 ## Development
 
