@@ -1,3 +1,7 @@
+## About
+
+## Installation
+
 ## Development
 
 Clone the repo.
@@ -12,14 +16,16 @@ To activiate
 
 To deactivate, `deactivate`
 
-## Testing
-
-Will use code_reivew.yml to test using cody on this repo
+### Testing
 
 Create an .env
 
 `OPENAI_API_KEY=token_here
 GITHUB_TOKEN=token_here
-GITLAB_TOKEN=your_gitlab_token_here`
+GITLAB_TOKEN=your_gitlab_token_here
+
+And then run
 
 `PYTHONPATH=src pytest -s tests/`
+
+This will run the code review logic on an GitHub Pull Request and log the output.
