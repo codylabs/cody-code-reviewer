@@ -7,6 +7,7 @@ import config
 logging.basicConfig(level=logging.DEBUG if config.DEBUG_MODE else logging.INFO)
 
 OPENAI_API_KEY = config.OPENAI_API_KEY
+OPENAI_MODEL = config.OPENAI_MODEL
 
 client = OpenAI(
     api_key=OPENAI_API_KEY,
@@ -18,7 +19,7 @@ def query_openai(prompt: str, retries=3, base_delay=1.0) -> str:
     while attempt < retries:
         try:
             completion = client.chat.completions.create(
-                model="gpt-4o",
+                model=OPENAI_MODEL,
                 messages=[
                     {"role": "system", "content": "You are a senior software engineer at Google reviewing a pull request."},
                     {"role": "user", "content": prompt}

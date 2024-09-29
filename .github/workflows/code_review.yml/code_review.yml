@@ -26,5 +26,9 @@ jobs:
           pr_number: ${{ github.event.pull_request.number }}
           repository: ${{ github.repository }}
         env:
+          # This is provided by default, you do not need to change this
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Update the below in your GitHub repo actions secrets to use your OpenAI API key
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # Update the below to use the model of your choice
+          OPENAI_MODEL: "gpt-4o"
