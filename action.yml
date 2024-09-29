@@ -1,5 +1,5 @@
 name: "Cody AI Code Reviewer - Powered by OpenAI"
-description: "Run AI code review on pull requests"
+description: "Run AI code reviews on pull requests using your Open AI API key"
 inputs:
   pr_number:
     description: "Pull request number"
