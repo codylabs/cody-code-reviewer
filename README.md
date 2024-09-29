@@ -75,7 +75,9 @@ permissions:
 
 3. Commit your code, create a pull request and watch Cody in action!
 
-<img src="cody_review.png" alt="PR Code Review Image" width="640px">
+<img src="cody_review_2.png" alt="PR Code Review Image" width="640px">
+
+<img src="cody_review_1.png" alt="PR Code Review Image" width="640px">
 
 ## Development
 
