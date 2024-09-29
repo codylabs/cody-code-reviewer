@@ -1,22 +1,22 @@
 ## About
 
-With no coding required to set up, Cody will automatically summarize and code review your changes on every pull request or merge request using AI.
+Cody will automatically summarize and code review your changes on every pull request using Open AI models.
+
+Note that an Open API key is required.
 
 Read more at [https://codylabs.io/](https://codylabs.io/)
 
 ## Installation
 
-Installation is as simple as adding your open API key, and creating a Github Actions workflow file to your repo.
+Installation is as simple as adding your Open API key, and creating a Github Actions workflow file to your repo.
 
-If you prefer you can watch these steps on YouTube:
-
-1. Add OPENAI_API_KEY as a github repo secret via Settings > Actions > Secrets and variables > New reposity secret. The variable name should be OPENAI_API_KEY and the value should be your Open API API Key.
+1. Add OPENAI_API_KEY as a GitHub repo secret via Settings > Actions > Secrets and variables > New repository secret. The variable name should be OPENAI_API_KEY, and the value should be your Open API API Key.
 
 ![Add secrets](add_a_secret_image.png)
 
 Note that GITHUB_TOKEN does not need to be added as is available by default.
 
-2. Add the following to a new folder in your repo .github/workflows/code_review.yml
+2. Add the following file to a new folder in your repo .github/workflows/code_review.yml
 
 ```
 name: Automated Code Review by Cody
@@ -65,7 +65,7 @@ permissions:
   pull-requests: write
 ```
 
-3. Commit your code and watch Cody in action!
+3. Commit your code, create a pull request and watch Cody in action!
 
 ![PR Code Review Image](pr_code_review.png)
 
@@ -98,3 +98,7 @@ And then run
 `PYTHONPATH=src pytest -s tests/`
 
 This will run the code review logic on an GitHub Pull Request and log the output.
+
+## License
+
+See the LICENSE.md file for details.
