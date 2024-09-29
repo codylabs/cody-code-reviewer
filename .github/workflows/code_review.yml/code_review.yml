@@ -1,30 +1,33 @@
-name: Code Review
-
-permissions:
-  contents: read
-  pull-requests: write
+name: Automated Code Review by Cody
 
 on:
   pull_request:
-  pull_request_review_comment:
-    types: [created]
-
-concurrency:
-  group: ${{ github.repository }}-${{ github.event.number || github.head_ref || github.sha }}-${{ github.workflow }}-${{ github.event_name == 'pull_request_review_comment' && 'pr_comment' || 'pr' }}
-  cancel-in-progress: ${{ github.event_name != 'pull_request_review_comment' }}
+    types: [opened, synchronize, reopened]
 
 jobs:
-  review:
+  code_review:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Use Cody AI Code Review Tool
-        uses: codylabs/cody-code-reviewer@master
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
         with:
-          pr_number: ${{ github.event.pull_request.number }}
-          repository: ${{ github.repository }}
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Clone Cody Code Reviewer Repository
+        run: |
+          git clone https://github.com/codylabs/cody-code-reviewer.git cody-code-reviewer
+
+      - name: Run Code Review Model
+        run: |
+          python cody-code-reviewer/src/review_pull_request.py ${{ github.event.pull_request.number }} ${{ github.repository }} > ${{ github.workspace }}/output.txt
         env:
           # This is provided by default, you do not need to change this
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -32,3 +35,18 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           # Update the below to use the model of your choice
           OPENAI_MODEL: "gpt-4o"
+
+      - name: Display Review Result
+        run: |
+          printf "Review result:\n%s" "${{ env.REVIEW_RESULT }}"
+
+      - name: Comment on Pull Request
+        if: failure() # Runs if any of the previous steps failed
+        run: |
+          python cody-code-reviewer/src/comment_on_pr.py ${{ github.event.pull_request.number }} "${{ secrets.GITHUB_TOKEN }}" ${{ github.repository }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+permissions:
+  contents: read
+  pull-requests: write
