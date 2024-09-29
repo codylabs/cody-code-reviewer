@@ -23,13 +23,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd cody-code-reviewer
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
       - name: Run Code Review Model
         run: |
-          cd cody-code-reviewer
           python src/review_pull_request.py ${{ github.event.pull_request.number }} ${{ github.repository }} > ${{ github.workspace }}/output.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -37,7 +35,6 @@ jobs:
 
       - name: Comment on Pull Request
         run: |
-          cd cody-code-reviewer
           python src/comment_on_pr.py ${{ github.event.pull_request.number }} "${{ secrets.GITHUB_TOKEN }}" ${{ github.repository }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

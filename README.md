@@ -14,7 +14,7 @@ Installation is as simple as adding your Open API key, and creating a Github Act
 
 ![Add secrets](add_a_secret_image.png)
 
-Note that GITHUB_TOKEN does not need to be added as is available by default.
+Note that GITHUB_TOKEN does not need to be added as it is available by default.
 
 2. Add the following file to a new folder in your repo .github/workflows/code_review.yml
 
@@ -32,7 +32,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-        - name: Clone cody-code-reviewer repository
+      - name: Clone cody-code-reviewer repository
         run: |
           git clone https://github.com/codylabs/cody-code-reviewer.git
           cd cody-code-reviewer
