@@ -10,7 +10,7 @@ def review_pull_request(repo_name: str, pull_number: int) -> None:
         if pr_data:
             prompt = (
                 f"Review this code like a senior software engineer at Google. "
-                f"Respond in a clear and concise github format with relevant headings (supports markdown) but do not start with ```markdown as it will break the github formatting. Start your reponse with 'AI Code Review by Cody (https://codylabs.io/)', a sumamry of the change under the heading 'Summary of Change', and then jump straight into a standard code review under the heading 'Code Review'. Be concise, focus on important aspects such as functionality and security and ignore nitpicks where possible."
+                f"Respond in a clear and concise github format with relevant headings (supports markdown) but do not start with ```markdown as it will break the github formatting. Start your reponse with 'AI Code Review by Cody (https://codylabs.io/)', a summary of the change under the heading 'Summary of Change', and then jump straight into a standard code review under the heading 'Code Review'. Be concise, focus on important aspects such as functionality and security and ignore nitpicks where possible."
                 f"Title: {pr_data.title}\nDescription: {pr_data.description}\Changes: {pr_data.diff}"
             )
             response: Optional[str] = query_openai(prompt)
