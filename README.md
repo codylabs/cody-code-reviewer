@@ -8,15 +8,21 @@ Read more at [https://codylabs.io/](https://codylabs.io/)
 
 ## Installation
 
-Installation is as simple as adding your Open API key, and creating a Github Actions workflow file to your repo.
+Installation is as simple as adding your Open API key, and adding a Github Actions workflow file to your repo.
 
 1. Add OPENAI_API_KEY as a GitHub repo secret via Settings > Actions > Secrets and variables > New repository secret. The variable name should be OPENAI_API_KEY, and the value should be your Open API API Key.
 
-![Add secrets](add_a_secret_image.png)
+<img src="openai.png" alt="Open API Api Key" width="500px">
+
+<img src="repo_secrets.png" alt="Add secrets" width="800px">
 
 Note that GITHUB_TOKEN does not need to be added as it is available by default.
 
-2. Add the following file to a new folder in your repo .github/workflows/code_review.yml
+2. Create a new folder and file in your repo **.github/workflows/code_review.yml**
+
+Copy the file from here: [cody_review.yml](https://github.com/your-repo/.github/workflows/cody_review.yml)
+
+Or available below:
 
 ```
 name: Automated Code Review by Cody
@@ -53,6 +59,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # Optional: update to a model of your choice from https://platform.openai.com/docs/models
+          OPENAI_MODEL: "gpt-4o"
 
       - name: Comment on Pull Request
         run: |
@@ -67,25 +75,26 @@ permissions:
 
 3. Commit your code, create a pull request and watch Cody in action!
 
-![PR Code Review Image](pr_code_review.png)
+<img src="cody_review.png" alt="PR Code Review Image" width="640px">
 
 ## Development
 
 Clone the repo.
 
-Note venv (virtual environment) is used so ensure that versions etc are specific to this repo.
+Note venv (virtual environment) is used to ensure that versions etc are specific to this repo.
 
 `python -m venv venv` and
 `pip install -r requirements.txt`
 
-To activiate
+To activiate:
 `source venv/bin/activate`
 
-To deactivate, `deactivate`
+To deactivate:
+`deactivate`
 
 ### Testing
 
-Create an .env
+Create an .env:
 
 ```
 OPENAI_API_KEY=token_here
@@ -93,12 +102,18 @@ GITHUB_TOKEN=token_here
 GITLAB_TOKEN=your_gitlab_token_here
 ```
 
-And then run
+And then run:
 
 `PYTHONPATH=src pytest -s tests/`
-
-This will run the code review logic on an GitHub Pull Request and log the output.
 
 ## License
 
 See the LICENSE.md file for details.
+
+## Contributing
+
+Contributions are welcome! Whether it's submitting issues, suggesting improvements, or contributing code, we appreciate your input.
+
+Please note that while this project is currently open for contributions, it is not open source. There may be an enterprise plan available in the future that will include additional features and support.
+
+Feel free to reach out via [david@codylabs.io](mailto:david@codylabs.io) if you have any questions or ideas.
