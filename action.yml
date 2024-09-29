@@ -35,3 +35,6 @@ runs:
         python src/comment_on_pr.py ${{ inputs.pr_number }} "${{ secrets.GITHUB_TOKEN }}" ${{ inputs.repository }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+branding:
+  icon: 'award'
+  color: 'green'
