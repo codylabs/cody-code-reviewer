@@ -20,7 +20,7 @@ Note that GITHUB_TOKEN does not need to be added as it is available by default.
 
 2. Create a new folder and file in your repo **.github/workflows/code_review.yml**
 
-Copy the file from here: [cody_review.yml](https://github.com/your-repo/.github/workflows/cody_review.yml)
+Copy the file from here: [cody_review.yml](https://github.com/codylabs/cody-code-reviewer/blob/master/.github/workflows/code_review.yml)
 
 Or available below:
 
