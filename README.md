@@ -4,7 +4,7 @@ Cody will automatically summarize and code review your changes on every pull req
 
 Note that an Open AI API key is required.
 
-Read more at [https://codylabs.io/](https://codylabs.io/)
+Read more at [https://codylabs.pages.dev/](https://codylabs.pages.dev/)
 
 ## Installation
 
@@ -121,4 +121,4 @@ Contributions are welcome! Whether it's submitting issues, suggesting improvemen
 
 Please note that while this project is currently open for contributions, it is not open source. There may be an enterprise plan available in the future that will include additional features and support.
 
-Feel free to reach out via [david@codylabs.io](mailto:david@codylabs.io) if you have any questions or ideas.
+Feel free to reach out by [opening an issue](https://github.com/codylabs/cody-code-reviewer/issues) if you have any questions or ideas.
