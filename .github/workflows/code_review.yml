@@ -19,8 +19,8 @@ jobs:
         run: |
           git clone https://github.com/codylabs/cody-code-reviewer.git
           cd cody-code-reviewer
-          # Pin to a specific release commit to ensure stability https://github.com/codylabs/cody-code-reviewer/releases/tag/v1.2.0
-          git checkout 2eee062e2ba9918fbfd28d218a9d2b095e99d57e
+          # Pin to a specific release commit to ensure stability https://github.com/codylabs/cody-code-reviewer/releases/tag/v1.3.0
+          git checkout 42800f56034b775ea5dedfcdf44882213e17a70c
 
       - name: Set up Python 3.9
         uses: actions/setup-python@v4
@@ -38,8 +38,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          # Optional: update to a model of your choice from https://platform.openai.com/docs/models
-          OPENAI_MODEL: "gpt-5"
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Pick your model: claude-* models use your ANTHROPIC_API_KEY, anything
+          # else uses your OPENAI_API_KEY. You only need the secret for the
+          # provider you choose.
+          # Claude models: https://platform.claude.com/docs/en/about-claude/models/overview
+          # OpenAI models: https://platform.openai.com/docs/models
+          MODEL: "gpt-5"
 
       - name: Comment on Pull Request
         run: |

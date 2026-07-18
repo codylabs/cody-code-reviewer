@@ -3,5 +3,6 @@ python-dotenv
 pytest
 PyGithub
 openai
+anthropic
 
 
