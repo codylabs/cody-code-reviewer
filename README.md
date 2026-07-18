@@ -1,16 +1,16 @@
 ## About
 
-Cody will automatically summarize and code review your changes on every pull request using Open AI models.
+Cody will automatically summarize and code review your changes on every pull request using OpenAI or Anthropic Claude models.
 
-Note that an Open AI API key is required.
+Note that an OpenAI or Anthropic API key is required, depending on the model you choose.
 
 Read more at [https://codylabs.pages.dev/](https://codylabs.pages.dev/)
 
 ## Installation
 
-Installation is as simple as adding your Open AI API key, and adding a Github Actions workflow file to your repo.
+Installation is as simple as adding your AI provider API key, and adding a Github Actions workflow file to your repo.
 
-1. Add your OPENAI_API_KEY as a GitHub repo secret via Settings > Actions > Secrets and variables > New repository secret.
+1. Add your OPENAI_API_KEY (or ANTHROPIC_API_KEY for Claude models) as a GitHub repo secret via Settings > Actions > Secrets and variables > New repository secret.
 
 <img src="openai.png" alt="Open API Api Key" width="500px">
 
@@ -65,8 +65,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          # Optional: update to a model of your choice from https://platform.openai.com/docs/models
-          OPENAI_MODEL: "gpt-5"
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Pick your model: claude-* models use your ANTHROPIC_API_KEY, anything
+          # else uses your OPENAI_API_KEY. You only need the secret for the
+          # provider you choose.
+          # Claude models: https://platform.claude.com/docs/en/about-claude/models/overview
+          # OpenAI models: https://platform.openai.com/docs/models
+          MODEL: "gpt-5"
 
       - name: Comment on Pull Request
         run: |
@@ -77,6 +82,39 @@ jobs:
 ```
 
 3. Commit your code, create a pull request and watch Cody in action!
+
+## Using Claude models
+
+Cody works with Anthropic's Claude models as well as OpenAI's. To review with Claude:
+
+1. Add ANTHROPIC_API_KEY as a repo secret (create a key at https://platform.claude.com/).
+2. Set MODEL to a Claude model in the "Run Code Review Model" step of your workflow:
+
+```
+      - name: Run Code Review Model
+        run: |
+          python src/review_pull_request.py ${{ github.event.pull_request.number }} ${{ github.repository }} > ${{ github.workspace }}/output.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          MODEL: "claude-opus-4-8"
+```
+
+Any model name starting with claude- is sent to Anthropic; anything else goes to OpenAI, so you only need the API key for the provider you pick.
+
+| Model | Best for |
+| --- | --- |
+| claude-opus-4-8 | The most capable reviews — recommended |
+| claude-sonnet-5 | Near-Opus quality at lower cost |
+| claude-haiku-4-5 | Fastest and cheapest |
+
+The full model list is at https://platform.claude.com/docs/en/about-claude/models/overview.
+
+## GitLab & Azure DevOps (Cody Pro)
+
+Cody Pro brings the same AI code reviews to GitLab merge requests and Azure DevOps pull requests, with ready-made pipeline templates for both platforms and support for the same OpenAI and Claude models. It's a one-time purchase:
+
+**[Get Cody Pro on Gumroad](https://codylabs.gumroad.com/l/cody-pro)**
 
 <img src="cody_review_2.png" alt="PR Code Review Image" width="640px">
 
