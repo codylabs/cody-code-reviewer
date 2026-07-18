@@ -46,8 +46,8 @@ jobs:
         run: |
           git clone https://github.com/codylabs/cody-code-reviewer.git
           cd cody-code-reviewer
-          # Pin to a specific release commit to ensure stability https://github.com/codylabs/cody-code-reviewer/releases/tag/v1.2.0
-          git checkout 2eee062e2ba9918fbfd28d218a9d2b095e99d57e
+          # Pin to a specific release commit to ensure stability https://github.com/codylabs/cody-code-reviewer/releases/tag/v1.3.0
+          git checkout 42800f56034b775ea5dedfcdf44882213e17a70c
 
       - name: Set up Python 3.9
         uses: actions/setup-python@v4
