@@ -6,6 +6,8 @@ Note that an OpenAI or Anthropic API key is required, depending on the model you
 
 Read more at [https://codylabs.pages.dev/](https://codylabs.pages.dev/)
 
+> **Using GitLab or Azure DevOps?** This action is for GitHub. **[Cody Pro](https://codylabs.gumroad.com/l/cody-pro)** brings the same AI reviews to GitLab merge requests and Azure DevOps pull requests — same Claude and OpenAI models, ready-made pipeline templates, one-time purchase. [Get Cody Pro →](https://codylabs.gumroad.com/l/cody-pro)
+
 ## Installation
 
 Installation is as simple as adding your AI provider API key, and adding a Github Actions workflow file to your repo.
