@@ -48,6 +48,7 @@ runs:
         MODEL: ${{ inputs.model }}
         PR_NUMBER: ${{ inputs.pr_number }}
         REPOSITORY: ${{ inputs.repository }}
+        REVIEW_OUTPUT: ${{ runner.temp }}/cody-review-${{ github.run_id }}-${{ github.run_attempt }}.md
 
     - name: Comment on Pull Request
       run: |
@@ -58,6 +59,7 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github_token }}
         PR_NUMBER: ${{ inputs.pr_number }}
         REPOSITORY: ${{ inputs.repository }}
+        REVIEW_OUTPUT: ${{ runner.temp }}/cody-review-${{ github.run_id }}-${{ github.run_attempt }}.md
 branding:
   icon: 'award'
   color: 'green'

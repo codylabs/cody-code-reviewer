@@ -38,8 +38,8 @@ def get_pull_request_data(repo_name: str, pull_number: int) -> Optional[PullRequ
             file_diff = f"\n\nDiff for {file.filename}:\n{file.patch}\n"
             complete_diff += file_diff
 
-        if not complete_diff: 
-            return None
+        if not complete_diff:
+            raise RuntimeError("No reviewable textual diff was found for this pull request.")
 
         pr_data = PullRequest(
             title=pr.title,
@@ -51,6 +51,8 @@ def get_pull_request_data(repo_name: str, pull_number: int) -> Optional[PullRequ
         )
         logging.info(f"Successfully retrieved PR data for {repo_name} PR #{pull_number}")
         return pr_data
-    except Exception as e:
+    except Exception as exc:
         logging.error("Failed to fetch repository or pull request", exc_info=True)
-        return None
+        raise RuntimeError(
+            f"Unable to fetch pull request data for {repo_name}#{pull_number}."
+        ) from exc

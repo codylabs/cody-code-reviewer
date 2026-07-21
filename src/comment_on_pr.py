@@ -1,9 +1,14 @@
 import os
 import sys
+from pathlib import Path
 from github import Github
 
 def post_comment(repo_name, pr_number, github_token):
-    with open('output.txt', 'r') as file:
+    output_path = Path(os.environ.get("REVIEW_OUTPUT", "output.txt"))
+    if not output_path.is_file():
+        raise FileNotFoundError(f"Review output was not found at {output_path}.")
+
+    with output_path.open('r', encoding='utf-8') as file:
         comment_body = file.read()
     
     g = Github(github_token)

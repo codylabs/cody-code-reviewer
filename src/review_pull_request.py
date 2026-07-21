@@ -1,8 +1,15 @@
 import argparse
+import os
 import sys
-from github_client import get_pull_request_data
-from model import query_model
+from pathlib import Path
 from typing import Optional
+
+try:
+    from .github_client import get_pull_request_data
+    from .model import query_model
+except ImportError:  # Support running this file directly from the action.
+    from github_client import get_pull_request_data
+    from model import query_model
 
 def review_pull_request(repo_name: str, pull_number: int) -> None:
     try:
@@ -20,7 +27,8 @@ def review_pull_request(repo_name: str, pull_number: int) -> None:
                 f"Changes:\n{pr_data.diff}"
             )
             response: Optional[str] = query_model(prompt)
-            with open('output.txt', 'w') as file:
+            output_path = Path(os.environ.get("REVIEW_OUTPUT", "output.txt"))
+            with output_path.open('w', encoding='utf-8') as file:
                 file.write(response or "No response from the configured AI provider. Please try again in a few minutes.")
     except Exception as e:
         print(f"Error during review process: {str(e)}")

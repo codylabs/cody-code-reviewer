@@ -39,9 +39,11 @@ jobs:
           # Claude models: https://platform.claude.com/docs/en/about-claude/models/overview
           # OpenAI models: https://developers.openai.com/api/docs/models
           MODEL: "gpt-5.6-sol"
+          REVIEW_OUTPUT: ${{ runner.temp }}/cody-review-${{ github.run_id }}-${{ github.run_attempt }}.md
 
       - name: Comment on Pull Request
         run: |
           python src/comment_on_pr.py ${{ github.event.pull_request.number }} ${{ github.repository }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REVIEW_OUTPUT: ${{ runner.temp }}/cody-review-${{ github.run_id }}-${{ github.run_attempt }}.md
