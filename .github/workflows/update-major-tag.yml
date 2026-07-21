@@ -43,5 +43,6 @@ jobs:
           fi
 
           git fetch --no-tags --depth=1 origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
-          git tag --force v1 "${RELEASE_TAG}"
+          release_commit="$(git rev-parse "${RELEASE_TAG}^{commit}")"
+          git tag --force v1 "$release_commit"
           git push --force origin refs/tags/v1
