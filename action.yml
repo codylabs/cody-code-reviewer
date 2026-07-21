@@ -31,19 +31,24 @@ runs:
     - name: Create isolated action environment
       run: |
         python -m venv "$CODY_VENV"
-        "$CODY_PYTHON" -m pip install --require-hashes -r "$GITHUB_ACTION_PATH/requirements.lock"
+        if [[ "$RUNNER_OS" == "Windows" ]]; then
+          action_python="$CODY_VENV/Scripts/python.exe"
+        else
+          action_python="$CODY_VENV/bin/python"
+        fi
+        echo "CODY_PYTHON=$action_python" >> "$GITHUB_ENV"
+        "$action_python" -m pip install --require-hashes -r "$GITHUB_ACTION_PATH/requirements.lock"
       shell: bash
       env:
-        CODY_PYTHON: ${{ runner.temp }}/cody-review-venv-${{ github.run_id }}-${{ github.run_attempt }}/bin/python
         CODY_VENV: ${{ runner.temp }}/cody-review-venv-${{ github.run_id }}-${{ github.run_attempt }}
         GITHUB_ACTION_PATH: ${{ github.action_path }}
+        RUNNER_OS: ${{ runner.os }}
 
     - name: Run Code Review Model
       run: |
         "$CODY_PYTHON" "$GITHUB_ACTION_PATH/src/review_pull_request.py" "$PR_NUMBER" "$REPOSITORY"
       shell: bash
       env:
-        CODY_PYTHON: ${{ runner.temp }}/cody-review-venv-${{ github.run_id }}-${{ github.run_attempt }}/bin/python
         GITHUB_ACTION_PATH: ${{ github.action_path }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
         OPENAI_API_KEY: ${{ inputs.openai_api_key }}
@@ -58,7 +63,6 @@ runs:
         "$CODY_PYTHON" "$GITHUB_ACTION_PATH/src/comment_on_pr.py" "$PR_NUMBER" "$REPOSITORY"
       shell: bash
       env:
-        CODY_PYTHON: ${{ runner.temp }}/cody-review-venv-${{ github.run_id }}-${{ github.run_attempt }}/bin/python
         GITHUB_ACTION_PATH: ${{ github.action_path }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
         PR_NUMBER: ${{ inputs.pr_number }}
