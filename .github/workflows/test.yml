@@ -22,6 +22,22 @@ jobs:
           python-version: "3.13"
           cache: pip
 
+      - name: Set up uv
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          version: "0.11.30"
+
+      - name: Verify dependency lock
+        run: |
+          cp requirements.lock "$RUNNER_TEMP/requirements.lock"
+          uv pip compile \
+            --python-version 3.13 \
+            --generate-hashes \
+            --no-header \
+            requirements.txt \
+            -o "$RUNNER_TEMP/requirements.lock"
+          diff -u requirements.lock "$RUNNER_TEMP/requirements.lock"
+
       - name: Install dependencies
         run: python -m pip install --require-hashes -r requirements.lock
 

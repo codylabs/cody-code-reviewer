@@ -121,7 +121,7 @@ And then run:
 
 When changing dependencies, update `requirements.txt` and regenerate the lock file with:
 
-`uv pip compile --python-version 3.13 --generate-hashes requirements.txt -o requirements.lock`
+`uv pip compile --python-version 3.13 --generate-hashes --no-header requirements.txt -o requirements.lock`
 
 ## License
 
