@@ -50,7 +50,10 @@ def query_openai(prompt: str, retries=3, base_delay=1.0) -> str:
                     {"role": "user", "content": prompt}
                 ]
             )
-            return completion.choices[0].message.content
+            text = (completion.choices[0].message.content or "").strip()
+            if not text:
+                raise RuntimeError("OpenAI returned no review text.")
+            return text
         except openai.AuthenticationError as auth_error:
             raise RuntimeError("OpenAI authentication failed.") from auth_error
         except openai.RateLimitError as rate_error:
@@ -89,11 +92,16 @@ def query_claude(prompt: str, retries=3, base_delay=1.0) -> str:
                     {"role": "user", "content": prompt}
                 ]
             )
-            text = "".join(block.text for block in response.content if block.type == "text")
+            text = "".join(
+                block.text
+                for block in response.content
+                if getattr(block, "type", None) == "text"
+            ).strip()
             if text:
                 return text
-            logging.error(f"Claude returned no text on attempt {attempt + 1} (stop_reason: {response.stop_reason})")
-            return f"Claude returned no review (stop_reason: {response.stop_reason})."
+            raise RuntimeError(
+                f"Claude returned no review text (stop_reason: {response.stop_reason})."
+            )
         except anthropic.AuthenticationError as auth_error:
             raise RuntimeError("Anthropic authentication failed.") from auth_error
         except anthropic.RateLimitError as rate_error:

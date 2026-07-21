@@ -43,6 +43,33 @@ def test_files_without_textual_patches_are_omitted(monkeypatch):
     assert "screenshot.png" in result.diff
     assert "None" not in result.diff
 
+
+def test_pull_request_payload_is_bounded(monkeypatch):
+    monkeypatch.setattr(github_client.config, "GITHUB_TOKEN", "token")
+    monkeypatch.setattr(github_client, "MAX_DIFF_CHARS", 40)
+    monkeypatch.setattr(github_client, "MAX_DESCRIPTION_CHARS", 20)
+    now = datetime.now(timezone.utc)
+    pull_request = SimpleNamespace(
+        title="Large update",
+        body="d" * 100,
+        state="open",
+        created_at=now,
+        updated_at=now,
+        get_files=lambda: [
+            SimpleNamespace(filename="src/app.py", patch="x" * 100),
+        ],
+    )
+
+    with patch("src.github_client.Github") as github_cls:
+        github_cls.return_value.get_repo.return_value.get_pull.return_value = pull_request
+
+        result = get_pull_request_data("codylabs/cody-code-reviewer", 14)
+
+    assert result.diff.endswith("[Diff truncated because it exceeded the review size limit.]")
+    assert result.description.endswith(
+        "[Description truncated because it exceeded the review size limit.]"
+    )
+
 # This test should be run sparingly due to its impact on API rate limits and potential costs.
 
 @pytest.mark.integration

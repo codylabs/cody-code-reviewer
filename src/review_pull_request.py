@@ -35,9 +35,11 @@ def review_pull_request(repo_name: str, pull_number: int) -> None:
                 f"<pull_request_data_json>{payload}</pull_request_data_json>"
             )
             response: Optional[str] = query_model(prompt)
+            if not response or not response.strip():
+                raise RuntimeError("The configured AI provider returned an empty review.")
             output_path = Path(os.environ.get("REVIEW_OUTPUT", "output.txt"))
             with output_path.open('w', encoding='utf-8') as file:
-                file.write(response or "No response from the configured AI provider. Please try again in a few minutes.")
+                file.write(response)
     except Exception as e:
         print(f"Error during review process: {str(e)}")
         # Fail the GitHub Action if there's an error

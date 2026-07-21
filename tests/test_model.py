@@ -61,3 +61,19 @@ def test_query_model_requires_matching_provider_key(monkeypatch):
 
     with pytest.raises(RuntimeError, match="OPENAI_API_KEY is required"):
         model.query_model("review this")
+
+
+def test_query_openai_retries_empty_responses(monkeypatch):
+    monkeypatch.setattr(model, "MODEL", "gpt-5.6-sol")
+    monkeypatch.setattr(model.config, "OPENAI_API_KEY", "openai-key")
+    monkeypatch.setattr(time, "sleep", lambda *_: None)
+    completion = SimpleNamespace(
+        choices=[SimpleNamespace(message=SimpleNamespace(content=""))]
+    )
+    with patch("openai.OpenAI") as openai_cls:
+        openai_cls.return_value.chat.completions.create.return_value = completion
+
+        with pytest.raises(RuntimeError, match="Failed to query OpenAI API"):
+            model.query_openai("review this", retries=2, base_delay=0)
+
+        assert openai_cls.return_value.chat.completions.create.call_count == 2
