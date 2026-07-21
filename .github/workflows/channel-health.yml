@@ -20,7 +20,7 @@ jobs:
           set -euo pipefail
           for url in \
             "https://github.com/codylabs/cody-code-reviewer#installation" \
-            "https://github.com/marketplace/actions/cody-ai-code-reviewer-powered-by-openai" \
+            "https://github.com/marketplace/actions/cody-ai-code-reviewer" \
             "https://docs.codylabs.uk/" \
             "https://codylabs.uk/" \
             "https://codylabs.gumroad.com/l/cody-pro"; do
@@ -39,5 +39,5 @@ jobs:
             https://api.github.com/repos/codylabs/cody-code-reviewer/releases/latest \
             | python -c 'import json, sys; print(json.load(sys.stdin)["tag_name"])')"
           marketplace_page="$(curl --fail --location --retry 3 --connect-timeout 10 --max-time 60 --silent --show-error \
-            https://github.com/marketplace/actions/cody-ai-code-reviewer-powered-by-openai)"
+            https://github.com/marketplace/actions/cody-ai-code-reviewer)"
           grep --fixed-strings --quiet "$latest_release" <<< "$marketplace_page"

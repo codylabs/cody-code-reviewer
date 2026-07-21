@@ -7,7 +7,7 @@ product and link here instead of copying workflow YAML or model tables.
 | Channel | Canonical responsibility |
 | --- | --- |
 | [GitHub README](https://github.com/codylabs/cody-code-reviewer#installation) | Installation, provider selection, current inputs, and model examples |
-| [GitHub Marketplace](https://github.com/marketplace/actions/cody-ai-code-reviewer-powered-by-openai) | Discoverability and the latest published release |
+| [GitHub Marketplace](https://github.com/marketplace/actions/cody-ai-code-reviewer) | Discoverability and the latest published release |
 | [Cody documentation](https://docs.codylabs.uk/) | Product overview, privacy, and links to GitHub setup |
 | [Cody Labs marketing site](https://codylabs.uk/) | Short product positioning and links to GitHub, Marketplace, docs, and Gumroad |
 | [Cody Pro on Gumroad](https://codylabs.gumroad.com/l/cody-pro) | GitLab/Azure DevOps sales page; detailed setup ships with the product |
