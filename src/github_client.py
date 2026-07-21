@@ -11,6 +11,16 @@ except ImportError:  # Support running this module as a script dependency.
 
 MAX_DIFF_CHARS = int(os.getenv("MAX_DIFF_CHARS", "200000"))
 MAX_DESCRIPTION_CHARS = int(os.getenv("MAX_DESCRIPTION_CHARS", "20000"))
+MAX_OMITTED_FILE_NAMES = 20
+
+
+def truncate_with_notice(text: str, limit: int, notice: str) -> str:
+    """Bound text to a hard limit while retaining a clear truncation notice."""
+    if len(text) <= limit:
+        return text
+    if limit <= len(notice):
+        return notice[:limit]
+    return text[:limit - len(notice)] + notice
 
 @dataclass
 class PullRequest:
@@ -61,20 +71,30 @@ def get_pull_request_data(repo_name: str, pull_number: int) -> Optional[PullRequ
         complete_diff = "".join(diff_parts)
         if not complete_diff:
             raise RuntimeError("No reviewable textual diff was found for this pull request.")
+        if omitted_files:
+            displayed_files = omitted_files[:MAX_OMITTED_FILE_NAMES]
+            omitted_summary = (
+                "\n\nFiles omitted because GitHub did not provide a textual patch:\n- "
+                + "\n- ".join(displayed_files)
+            )
+            remaining_count = len(omitted_files) - len(displayed_files)
+            if remaining_count:
+                omitted_summary += f"\n- ... and {remaining_count} more omitted files"
+            complete_diff += omitted_summary
         if diff_truncated:
             complete_diff += "\n\n[Diff truncated because it exceeded the review size limit.]"
-        if omitted_files:
-            complete_diff += (
-                "\n\nFiles omitted because GitHub did not provide a textual patch:\n- "
-                + "\n- ".join(omitted_files)
-            )
+        complete_diff = truncate_with_notice(
+            complete_diff,
+            MAX_DIFF_CHARS,
+            "\n\n[Review data truncated because it exceeded the review size limit.]",
+        )
 
         description = pr.body or ""
-        if len(description) > MAX_DESCRIPTION_CHARS:
-            description = (
-                description[:MAX_DESCRIPTION_CHARS]
-                + "\n\n[Description truncated because it exceeded the review size limit.]"
-            )
+        description = truncate_with_notice(
+            description,
+            MAX_DESCRIPTION_CHARS,
+            "\n\n[Description truncated because it exceeded the review size limit.]",
+        )
 
         pr_data = PullRequest(
             title=pr.title,

@@ -28,18 +28,22 @@ runs:
       with:
         python-version: "3.13"
 
-    - name: Install dependencies
+    - name: Create isolated action environment
       run: |
-        python -m pip install --require-hashes -r "$GITHUB_ACTION_PATH/requirements.lock"
+        python -m venv "$CODY_VENV"
+        "$CODY_PYTHON" -m pip install --require-hashes -r "$GITHUB_ACTION_PATH/requirements.lock"
       shell: bash
       env:
+        CODY_PYTHON: ${{ runner.temp }}/cody-review-venv-${{ github.run_id }}-${{ github.run_attempt }}/bin/python
+        CODY_VENV: ${{ runner.temp }}/cody-review-venv-${{ github.run_id }}-${{ github.run_attempt }}
         GITHUB_ACTION_PATH: ${{ github.action_path }}
 
     - name: Run Code Review Model
       run: |
-        python "$GITHUB_ACTION_PATH/src/review_pull_request.py" "$PR_NUMBER" "$REPOSITORY"
+        "$CODY_PYTHON" "$GITHUB_ACTION_PATH/src/review_pull_request.py" "$PR_NUMBER" "$REPOSITORY"
       shell: bash
       env:
+        CODY_PYTHON: ${{ runner.temp }}/cody-review-venv-${{ github.run_id }}-${{ github.run_attempt }}/bin/python
         GITHUB_ACTION_PATH: ${{ github.action_path }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
         OPENAI_API_KEY: ${{ inputs.openai_api_key }}
@@ -51,9 +55,10 @@ runs:
 
     - name: Comment on Pull Request
       run: |
-        python "$GITHUB_ACTION_PATH/src/comment_on_pr.py" "$PR_NUMBER" "$REPOSITORY"
+        "$CODY_PYTHON" "$GITHUB_ACTION_PATH/src/comment_on_pr.py" "$PR_NUMBER" "$REPOSITORY"
       shell: bash
       env:
+        CODY_PYTHON: ${{ runner.temp }}/cody-review-venv-${{ github.run_id }}-${{ github.run_attempt }}/bin/python
         GITHUB_ACTION_PATH: ${{ github.action_path }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
         PR_NUMBER: ${{ inputs.pr_number }}

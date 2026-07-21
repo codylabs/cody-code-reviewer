@@ -30,16 +30,24 @@ jobs:
       - name: Verify dependency lock
         run: |
           cp requirements.lock "$RUNNER_TEMP/requirements.lock"
+          cp requirements-dev.lock "$RUNNER_TEMP/requirements-dev.lock"
           uv pip compile \
             --python-version 3.13 \
             --generate-hashes \
             --no-header \
             requirements.txt \
             -o "$RUNNER_TEMP/requirements.lock"
+          uv pip compile \
+            --python-version 3.13 \
+            --generate-hashes \
+            --no-header \
+            requirements-dev.txt \
+            -o "$RUNNER_TEMP/requirements-dev.lock"
           diff -u requirements.lock "$RUNNER_TEMP/requirements.lock"
+          diff -u requirements-dev.lock "$RUNNER_TEMP/requirements-dev.lock"
 
       - name: Install dependencies
-        run: python -m pip install --require-hashes -r requirements.lock
+        run: python -m pip install --require-hashes -r requirements-dev.lock
 
       - name: Run unit tests
         run: python -m pytest -m "not integration"

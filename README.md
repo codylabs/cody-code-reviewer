@@ -97,7 +97,7 @@ Clone the repo.
 Note venv (virtual environment) is used to ensure that versions etc are specific to this repo.
 
 `python -m venv venv` and
-`pip install --require-hashes -r requirements.lock`
+`pip install --require-hashes -r requirements-dev.lock`
 
 To activate:
 `source venv/bin/activate`
@@ -119,9 +119,11 @@ And then run:
 
 `PYTHONPATH=src pytest -s tests/`
 
-When changing dependencies, update `requirements.txt` and regenerate the lock file with:
+When changing dependencies, update `requirements.txt` or `requirements-dev.txt` and regenerate the lock files with:
 
 `uv pip compile --python-version 3.13 --generate-hashes --no-header requirements.txt -o requirements.lock`
+
+`uv pip compile --python-version 3.13 --generate-hashes --no-header requirements-dev.txt -o requirements-dev.lock`
 
 ## License
 

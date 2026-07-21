@@ -65,10 +65,10 @@ def test_pull_request_payload_is_bounded(monkeypatch):
 
         result = get_pull_request_data("codylabs/cody-code-reviewer", 14)
 
-    assert result.diff.endswith("[Diff truncated because it exceeded the review size limit.]")
-    assert result.description.endswith(
-        "[Description truncated because it exceeded the review size limit.]"
-    )
+    assert len(result.diff) == 40
+    assert "truncated" in result.diff
+    assert len(result.description) == 20
+    assert "trunc" in result.description
 
 # This test should be run sparingly due to its impact on API rate limits and potential costs.
 
