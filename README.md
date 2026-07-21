@@ -4,7 +4,7 @@ Cody will automatically summarize and code review your changes on every pull req
 
 Note that an OpenAI or Anthropic API key is required, depending on the model you choose.
 
-Read more at [https://codylabs.uk/](https://codylabs.uk/)
+Read more at [https://docs.codylabs.uk/](https://docs.codylabs.uk/)
 
 > **Using GitLab or Azure DevOps?** This action is for GitHub. [Cody Pro for GitLab and Azure DevOps](https://codylabs.gumroad.com/l/cody-pro) provides the same OpenAI and Claude-powered reviews with ready-made pipeline templates.
 

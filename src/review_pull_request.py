@@ -27,7 +27,7 @@ def review_pull_request(repo_name: str, pull_number: int) -> None:
             prompt = (
                 "Review this pull request as a senior software engineer. "
                 "Return concise GitHub-flavored Markdown without wrapping the response in a code fence. "
-                "Start with 'AI Code Review by Cody (https://codylabs.uk/)'. "
+                "Start with 'AI Code Review by Cody (https://docs.codylabs.uk/)'. "
                 "Include a 'Summary of Change' section followed by a 'Code Review' section. "
                 "Prioritize correctness, security, reliability, and performance; omit low-value nitpicks. "
                 "When useful, provide directly applicable code suggestions. "
