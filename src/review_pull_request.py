@@ -9,13 +9,19 @@ def review_pull_request(repo_name: str, pull_number: int) -> None:
         pr_data = get_pull_request_data(repo_name, pull_number)
         if pr_data:
             prompt = (
-                f"Review this code like a senior software engineer at Google. "
-                f"Respond in a clear and concise github format with relevant headings (supports markdown) but do not start with ```markdown as it will break the github formatting. Start your reponse with 'AI Code Review by Cody (https://codylabs.pages.dev/)', a summary of the change under the heading 'Summary of Change', and then jump straight into a standard code review under the heading 'Code Review'. Be concise, focus on important aspects such as functionality and security and ignore nitpicks where possible. Provide code suggestions using markdown format."
-                f"Title: {pr_data.title}\nDescription: {pr_data.description}\Changes: {pr_data.diff}"
+                "Review this pull request as a senior software engineer. "
+                "Return concise GitHub-flavored Markdown without wrapping the response in a code fence. "
+                "Start with 'AI Code Review by Cody (https://codylabs.pages.dev/)'. "
+                "Include a 'Summary of Change' section followed by a 'Code Review' section. "
+                "Prioritize correctness, security, reliability, and performance; omit low-value nitpicks. "
+                "When useful, provide directly applicable code suggestions.\n\n"
+                f"Title: {pr_data.title}\n"
+                f"Description: {pr_data.description}\n"
+                f"Changes:\n{pr_data.diff}"
             )
             response: Optional[str] = query_model(prompt)
             with open('output.txt', 'w') as file:
-                file.write(response or "No response from OpenAI, please try again in a few minutes.")
+                file.write(response or "No response from the configured AI provider. Please try again in a few minutes.")
     except Exception as e:
         print(f"Error during review process: {str(e)}")
         # Fail the GitHub Action if there's an error

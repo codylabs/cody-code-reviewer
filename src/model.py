@@ -1,12 +1,16 @@
 import time
 import logging
-import config
+
+try:
+    from . import config
+except ImportError:  # Support running this module as a script dependency.
+    import config
 
 logging.basicConfig(level=logging.DEBUG if config.DEBUG_MODE else logging.INFO)
 
 MODEL = config.MODEL
 
-SYSTEM_PROMPT = "You are a senior software engineer at Google reviewing a pull request."
+SYSTEM_PROMPT = "You are a senior software engineer reviewing a pull request."
 
 
 def query_model(prompt: str, retries=3, base_delay=1.0) -> str:

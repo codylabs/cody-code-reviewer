@@ -26,7 +26,7 @@ def test_query_model_routes_claude_models_to_anthropic(monkeypatch):
 
 
 def test_query_model_routes_other_models_to_openai(monkeypatch):
-    monkeypatch.setattr(model, "MODEL", "gpt-5")
+    monkeypatch.setattr(model, "MODEL", "gpt-5.6-sol")
     completion = SimpleNamespace(
         choices=[SimpleNamespace(message=SimpleNamespace(content="LGTM"))]
     )
@@ -36,7 +36,7 @@ def test_query_model_routes_other_models_to_openai(monkeypatch):
         assert model.query_model("review this") == "LGTM"
 
         kwargs = openai_cls.return_value.chat.completions.create.call_args.kwargs
-        assert kwargs["model"] == "gpt-5"
+        assert kwargs["model"] == "gpt-5.6-sol"
 
 
 def test_query_claude_returns_error_message_after_retries(monkeypatch):

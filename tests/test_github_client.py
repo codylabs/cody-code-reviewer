@@ -1,10 +1,18 @@
 import pytest
 import logging
+import src.github_client as github_client
 from src.github_client import get_pull_request_data
 from src.model import query_openai
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+
+def test_missing_github_token_raises_clear_error(monkeypatch):
+    monkeypatch.setattr(github_client.config, "GITHUB_TOKEN", None)
+
+    with pytest.raises(RuntimeError, match="GITHUB_TOKEN is required"):
+        get_pull_request_data("octocat/Hello-World", 6)
 
 # This test should be run sparingly due to its impact on API rate limits and potential costs.
 

@@ -1,26 +1,12 @@
-import sys
 from github import Github
 import logging
-import config
 from typing import Optional
 from dataclasses import dataclass
 
-# Configure detailed logging
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S',
-                    handlers=[
-                        logging.FileHandler("debug.log"),
-                        logging.StreamHandler()
-                    ])
-
-# Load the GitHub token from an environment variable
-GITHUB_TOKEN = config.GITHUB_TOKEN
-if not GITHUB_TOKEN:
-    logging.error("GitHub token is not set. Please configure GITHUB_TOKEN environment variable.")
-    sys.exit(1)
-
-g = Github(GITHUB_TOKEN)
+try:
+    from . import config
+except ImportError:  # Support running this module as a script dependency.
+    import config
 
 @dataclass
 class PullRequest:
@@ -32,8 +18,12 @@ class PullRequest:
     updated_at: str
 
 def get_pull_request_data(repo_name: str, pull_number: int) -> Optional[PullRequest]:
+    if not config.GITHUB_TOKEN:
+        raise RuntimeError("GITHUB_TOKEN is required to fetch pull request data.")
+
     try:
         logging.info(f"Fetching PR data for repo: {repo_name}, PR number: {pull_number}")
+        g = Github(config.GITHUB_TOKEN)
         repo = g.get_repo(repo_name)
         pr = repo.get_pull(pull_number)
 

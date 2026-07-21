@@ -1,5 +1,5 @@
-name: "Cody AI Code Reviewer - Powered by OpenAI"
-description: "Run AI code reviews on pull requests using your OpenAI or Anthropic Claude API key"
+name: "Cody AI Code Reviewer"
+description: "Review pull requests with OpenAI or Anthropic Claude models"
 inputs:
   pr_number:
     description: "Pull request number"
@@ -7,34 +7,57 @@ inputs:
   repository:
     description: "Repository name"
     required: true
+  github_token:
+    description: "GitHub token used to read the pull request and post the review"
+    required: true
+  openai_api_key:
+    description: "OpenAI API key; required when using an OpenAI model"
+    required: false
+  anthropic_api_key:
+    description: "Anthropic API key; required when using a Claude model"
+    required: false
+  model:
+    description: "OpenAI or Anthropic model ID used for the review"
+    required: false
+    default: "gpt-5.6-sol"
 runs:
   using: "composite"
   steps:
-    - name: Check out repository
-      uses: actions/checkout@v3
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
+    - name: Set up Python 3.13
+      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:
-        python-version: "3.9"
+        python-version: "3.13"
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        python -m pip install -r "$GITHUB_ACTION_PATH/requirements.txt"
+      shell: bash
+      env:
+        GITHUB_ACTION_PATH: ${{ github.action_path }}
 
     - name: Run Code Review Model
       run: |
-        python src/review_pull_request.py ${{ inputs.pr_number }} ${{ inputs.repository }}
+        python "$GITHUB_ACTION_PATH/src/review_pull_request.py" "$PR_NUMBER" "$REPOSITORY"
+      shell: bash
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        GITHUB_ACTION_PATH: ${{ github.action_path }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+        OPENAI_API_KEY: ${{ inputs.openai_api_key }}
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic_api_key }}
+        MODEL: ${{ inputs.model }}
+        PR_NUMBER: ${{ inputs.pr_number }}
+        REPOSITORY: ${{ inputs.repository }}
 
     - name: Comment on Pull Request
       run: |
-        python src/comment_on_pr.py ${{ inputs.pr_number }} "${{ secrets.GITHUB_TOKEN }}" ${{ inputs.repository }}
+        python "$GITHUB_ACTION_PATH/src/comment_on_pr.py" "$PR_NUMBER" "$REPOSITORY"
+      shell: bash
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_ACTION_PATH: ${{ github.action_path }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+        PR_NUMBER: ${{ inputs.pr_number }}
+        REPOSITORY: ${{ inputs.repository }}
 branding:
   icon: 'award'
   color: 'green'
