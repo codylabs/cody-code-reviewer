@@ -1,8 +1,4 @@
-httpx
-python-dotenv
-pytest
-PyGithub
-openai
-anthropic
-
-
+anthropic==0.117.0
+openai==2.46.0
+PyGithub==2.9.1
+python-dotenv==1.2.1

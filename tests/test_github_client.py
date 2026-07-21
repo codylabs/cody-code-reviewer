@@ -1,10 +1,74 @@
 import pytest
 import logging
+from datetime import datetime, timezone
+from types import SimpleNamespace
+from unittest.mock import patch
+
+import src.github_client as github_client
 from src.github_client import get_pull_request_data
 from src.model import query_openai
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+
+def test_missing_github_token_raises_clear_error(monkeypatch):
+    monkeypatch.setattr(github_client.config, "GITHUB_TOKEN", None)
+
+    with pytest.raises(RuntimeError, match="GITHUB_TOKEN is required"):
+        get_pull_request_data("octocat/Hello-World", 6)
+
+
+def test_files_without_textual_patches_are_omitted(monkeypatch):
+    monkeypatch.setattr(github_client.config, "GITHUB_TOKEN", "token")
+    now = datetime.now(timezone.utc)
+    pull_request = SimpleNamespace(
+        title="Update assets",
+        body="Updates an image and code",
+        state="open",
+        created_at=now,
+        updated_at=now,
+        get_files=lambda: [
+            SimpleNamespace(filename="screenshot.png", patch=None),
+            SimpleNamespace(filename="src/app.py", patch="@@ -1 +1 @@"),
+        ],
+    )
+
+    with patch("src.github_client.Github") as github_cls:
+        github_cls.return_value.get_repo.return_value.get_pull.return_value = pull_request
+
+        result = get_pull_request_data("codylabs/cody-code-reviewer", 14)
+
+    assert "Diff for src/app.py" in result.diff
+    assert "screenshot.png" in result.diff
+    assert "None" not in result.diff
+
+
+def test_pull_request_payload_is_bounded(monkeypatch):
+    monkeypatch.setattr(github_client.config, "GITHUB_TOKEN", "token")
+    monkeypatch.setattr(github_client, "MAX_DIFF_CHARS", 40)
+    monkeypatch.setattr(github_client, "MAX_DESCRIPTION_CHARS", 20)
+    now = datetime.now(timezone.utc)
+    pull_request = SimpleNamespace(
+        title="Large update",
+        body="d" * 100,
+        state="open",
+        created_at=now,
+        updated_at=now,
+        get_files=lambda: [
+            SimpleNamespace(filename="src/app.py", patch="x" * 100),
+        ],
+    )
+
+    with patch("src.github_client.Github") as github_cls:
+        github_cls.return_value.get_repo.return_value.get_pull.return_value = pull_request
+
+        result = get_pull_request_data("codylabs/cody-code-reviewer", 14)
+
+    assert len(result.diff) == 40
+    assert "truncated" in result.diff
+    assert len(result.description) == 20
+    assert "trunc" in result.description
 
 # This test should be run sparingly due to its impact on API rate limits and potential costs.
 
