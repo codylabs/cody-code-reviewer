@@ -13,37 +13,12 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Set up Python 3.13
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+      - name: Review pull request
+        uses: codylabs/cody-code-reviewer@4de34bf03deb36b53a6ea3c8ba37386411a5f36f # v1.3.1 release candidate
         with:
-          python-version: "3.13"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Run Code Review Model
-        run: |
-          python src/review_pull_request.py ${{ github.event.pull_request.number }} ${{ github.repository }} > ${{ github.workspace }}/output.txt
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          # Pick your model: claude-* models use your ANTHROPIC_API_KEY, anything
-          # else uses your OPENAI_API_KEY. You only need the secret for the
-          # provider you choose.
-          # Claude models: https://platform.claude.com/docs/en/about-claude/models/overview
-          # OpenAI models: https://developers.openai.com/api/docs/models
-          MODEL: "gpt-5.6-sol"
-          REVIEW_OUTPUT: ${{ runner.temp }}/cody-review-${{ github.run_id }}-${{ github.run_attempt }}.md
-
-      - name: Comment on Pull Request
-        run: |
-          python src/comment_on_pr.py ${{ github.event.pull_request.number }} ${{ github.repository }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REVIEW_OUTPUT: ${{ runner.temp }}/cody-review-${{ github.run_id }}-${{ github.run_attempt }}.md
+          pr_number: ${{ github.event.pull_request.number }}
+          repository: ${{ github.repository }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          model: gpt-5.6-sol
