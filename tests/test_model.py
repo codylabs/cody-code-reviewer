@@ -43,16 +43,27 @@ def test_query_model_routes_other_models_to_openai(monkeypatch):
         assert kwargs["model"] == "gpt-5.6-sol"
 
 
-def test_query_claude_raises_after_retries(monkeypatch):
+def test_query_claude_retries_empty_responses(monkeypatch):
     monkeypatch.setattr(model, "MODEL", "claude-opus-4-8")
     monkeypatch.setattr(time, "sleep", lambda *_: None)
     with patch("anthropic.Anthropic") as anthropic_cls:
-        anthropic_cls.return_value.messages.create.side_effect = Exception("boom")
+        anthropic_cls.return_value.messages.create.return_value = _claude_response("")
 
         with pytest.raises(RuntimeError, match="Failed to query the Anthropic API"):
             model.query_claude("review this", retries=2, base_delay=0)
 
         assert anthropic_cls.return_value.messages.create.call_count == 2
+
+
+def test_unexpected_provider_errors_fail_immediately(monkeypatch):
+    monkeypatch.setattr(model, "MODEL", "claude-opus-4-8")
+    with patch("anthropic.Anthropic") as anthropic_cls:
+        anthropic_cls.return_value.messages.create.side_effect = ValueError("boom")
+
+        with pytest.raises(ValueError, match="boom"):
+            model.query_claude("review this", retries=3, base_delay=0)
+
+        assert anthropic_cls.return_value.messages.create.call_count == 1
 
 
 def test_query_model_requires_matching_provider_key(monkeypatch):

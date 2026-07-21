@@ -6,10 +6,3 @@ updates:
       interval: monthly
     labels:
       - dependencies
-
-  - package-ecosystem: pip
-    directory: /
-    schedule:
-      interval: monthly
-    labels:
-      - dependencies

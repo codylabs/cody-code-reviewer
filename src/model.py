@@ -17,6 +17,12 @@ SYSTEM_PROMPT = (
 )
 
 
+def wait_before_retry(attempt: int, retries: int, base_delay: float) -> None:
+    """Back off only when another attempt remains."""
+    if attempt < retries - 1:
+        time.sleep(base_delay * (2 ** attempt))
+
+
 def query_model(prompt: str, retries=3, base_delay=1.0) -> str:
     """Send a prompt to the configured model provider and return the response.
 
@@ -58,15 +64,24 @@ def query_openai(prompt: str, retries=3, base_delay=1.0) -> str:
             raise RuntimeError("OpenAI authentication failed.") from auth_error
         except openai.RateLimitError as rate_error:
             logging.error(f"OpenAI rate limit on attempt {attempt + 1}: {rate_error}")
-            time.sleep(base_delay * (2 ** (attempt + 1)))
-        except openai.APIError as api_error:
-            logging.error(f"OpenAI APIError on attempt {attempt + 1}: {api_error}")
-            time.sleep(base_delay * (2 ** attempt))
-        except Exception as e:
-            logging.error(f"General error on attempt {attempt + 1}: {str(e)}")
-            time.sleep(base_delay * (2 ** attempt))
-            if attempt == retries - 1:
-                logging.critical(f"Final attempt failed with error: {str(e)}")
+            wait_before_retry(attempt, retries, base_delay)
+        except (openai.APIConnectionError, openai.APITimeoutError) as connection_error:
+            logging.error(
+                f"OpenAI connection failure on attempt {attempt + 1}: {connection_error}"
+            )
+            wait_before_retry(attempt, retries, base_delay)
+        except openai.APIStatusError as status_error:
+            if status_error.status_code < 500:
+                raise RuntimeError(
+                    f"OpenAI rejected the request with status {status_error.status_code}."
+                ) from status_error
+            logging.error(
+                f"OpenAI server error on attempt {attempt + 1}: {status_error}"
+            )
+            wait_before_retry(attempt, retries, base_delay)
+        except RuntimeError as response_error:
+            logging.error(f"OpenAI response error on attempt {attempt + 1}: {response_error}")
+            wait_before_retry(attempt, retries, base_delay)
         finally:
             attempt += 1
 
@@ -106,15 +121,26 @@ def query_claude(prompt: str, retries=3, base_delay=1.0) -> str:
             raise RuntimeError("Anthropic authentication failed.") from auth_error
         except anthropic.RateLimitError as rate_error:
             logging.error(f"Anthropic rate limit on attempt {attempt + 1}: {rate_error}")
-            time.sleep(base_delay * (2 ** (attempt + 1)))
+            wait_before_retry(attempt, retries, base_delay)
+        except anthropic.APIConnectionError as connection_error:
+            logging.error(
+                f"Anthropic connection failure on attempt {attempt + 1}: {connection_error}"
+            )
+            wait_before_retry(attempt, retries, base_delay)
         except anthropic.APIStatusError as api_error:
-            logging.error(f"Anthropic APIStatusError on attempt {attempt + 1}: {api_error}")
-            time.sleep(base_delay * (2 ** attempt))
-        except Exception as e:
-            logging.error(f"General error on attempt {attempt + 1}: {str(e)}")
-            time.sleep(base_delay * (2 ** attempt))
-            if attempt == retries - 1:
-                logging.critical(f"Final attempt failed with error: {str(e)}")
+            if api_error.status_code < 500:
+                raise RuntimeError(
+                    f"Anthropic rejected the request with status {api_error.status_code}."
+                ) from api_error
+            logging.error(
+                f"Anthropic server error on attempt {attempt + 1}: {api_error}"
+            )
+            wait_before_retry(attempt, retries, base_delay)
+        except RuntimeError as response_error:
+            logging.error(
+                f"Anthropic response error on attempt {attempt + 1}: {response_error}"
+            )
+            wait_before_retry(attempt, retries, base_delay)
         finally:
             attempt += 1
 
