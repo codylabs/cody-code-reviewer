@@ -11,6 +11,7 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Check canonical Cody channels
         run: |
@@ -21,12 +22,13 @@ jobs:
             "https://docs.codylabs.uk/" \
             "https://codylabs.uk/" \
             "https://codylabs.gumroad.com/l/cody-pro"; do
-            curl --fail --location --retry 3 --silent --show-error --output /dev/null "$url"
+            curl --fail --location --retry 3 --connect-timeout 10 --max-time 60 \
+              --silent --show-error --output /dev/null "$url"
           done
 
-          latest_release="$(curl --fail --silent --show-error \
+          latest_release="$(curl --fail --connect-timeout 10 --max-time 60 --silent --show-error \
             https://api.github.com/repos/codylabs/cody-code-reviewer/releases/latest \
             | python -c 'import json, sys; print(json.load(sys.stdin)["tag_name"])')"
-          marketplace_page="$(curl --fail --location --silent --show-error \
+          marketplace_page="$(curl --fail --location --connect-timeout 10 --max-time 60 --silent --show-error \
             https://github.com/marketplace/actions/cody-ai-code-reviewer-powered-by-openai)"
           grep --fixed-strings --quiet "$latest_release" <<< "$marketplace_page"
