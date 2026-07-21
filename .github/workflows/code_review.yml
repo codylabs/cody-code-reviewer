@@ -14,7 +14,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Review pull request
-        uses: codylabs/cody-code-reviewer@4de34bf03deb36b53a6ea3c8ba37386411a5f36f # v1.3.1 release candidate
+        uses: codylabs/cody-code-reviewer@251e90199fb2f0e242270934da78210df8d24c16 # v1.3.1 release candidate
         with:
           pr_number: ${{ github.event.pull_request.number }}
           repository: ${{ github.repository }}
