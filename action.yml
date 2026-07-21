@@ -30,8 +30,7 @@ runs:
 
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        python -m pip install -r "$GITHUB_ACTION_PATH/requirements.txt"
+        python -m pip install --require-hashes -r "$GITHUB_ACTION_PATH/requirements.lock"
       shell: bash
       env:
         GITHUB_ACTION_PATH: ${{ github.action_path }}

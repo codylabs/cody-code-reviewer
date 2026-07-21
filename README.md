@@ -97,7 +97,7 @@ Clone the repo.
 Note venv (virtual environment) is used to ensure that versions etc are specific to this repo.
 
 `python -m venv venv` and
-`pip install -r requirements.txt`
+`pip install --require-hashes -r requirements.lock`
 
 To activate:
 `source venv/bin/activate`
@@ -118,6 +118,10 @@ GITLAB_TOKEN=your_gitlab_token_here
 And then run:
 
 `PYTHONPATH=src pytest -s tests/`
+
+When changing dependencies, update `requirements.txt` and regenerate the lock file with:
+
+`uv pip compile --python-version 3.13 --generate-hashes requirements.txt -o requirements.lock`
 
 ## License
 

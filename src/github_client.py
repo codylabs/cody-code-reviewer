@@ -29,10 +29,14 @@ def get_pull_request_data(repo_name: str, pull_number: int) -> Optional[PullRequ
 
         files = pr.get_files()
         complete_diff = ""
+        omitted_files = []
         ignored_paths = ['venv/', 'node_modules/', 'dist/']
 
         for file in files:
             if any(file.filename.startswith(path) for path in ignored_paths):
+                continue
+            if not file.patch:
+                omitted_files.append(file.filename)
                 continue
 
             file_diff = f"\n\nDiff for {file.filename}:\n{file.patch}\n"
@@ -40,6 +44,11 @@ def get_pull_request_data(repo_name: str, pull_number: int) -> Optional[PullRequ
 
         if not complete_diff:
             raise RuntimeError("No reviewable textual diff was found for this pull request.")
+        if omitted_files:
+            complete_diff += (
+                "\n\nFiles omitted because GitHub did not provide a textual patch:\n- "
+                + "\n- ".join(omitted_files)
+            )
 
         pr_data = PullRequest(
             title=pr.title,
