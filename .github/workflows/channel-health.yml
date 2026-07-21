@@ -1,0 +1,43 @@
+name: Channel health
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 8 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check canonical Cody channels
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          for url in \
+            "https://github.com/codylabs/cody-code-reviewer#installation" \
+            "https://github.com/marketplace/actions/cody-ai-code-reviewer-powered-by-openai" \
+            "https://docs.codylabs.uk/" \
+            "https://codylabs.uk/" \
+            "https://codylabs.gumroad.com/l/cody-pro"; do
+            curl --fail --location --retry 3 --connect-timeout 10 --max-time 60 \
+              --silent --show-error --output /dev/null "$url"
+          done
+
+          readme="$(curl --fail --location --retry 3 --connect-timeout 10 --max-time 60 \
+            --silent --show-error \
+            https://raw.githubusercontent.com/codylabs/cody-code-reviewer/master/README.md)"
+          grep --fixed-strings --quiet '## Installation' <<< "$readme"
+
+          latest_release="$(curl --fail --retry 3 --connect-timeout 10 --max-time 60 --silent --show-error \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/codylabs/cody-code-reviewer/releases/latest \
+            | python -c 'import json, sys; print(json.load(sys.stdin)["tag_name"])')"
+          marketplace_page="$(curl --fail --location --retry 3 --connect-timeout 10 --max-time 60 --silent --show-error \
+            https://github.com/marketplace/actions/cody-ai-code-reviewer-powered-by-openai)"
+          grep --fixed-strings --quiet "$latest_release" <<< "$marketplace_page"
