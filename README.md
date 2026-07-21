@@ -4,7 +4,7 @@ Cody will automatically summarize and code review your changes on every pull req
 
 Note that an OpenAI or Anthropic API key is required, depending on the model you choose.
 
-Read more at [https://codylabs.uk/](https://codylabs.uk/)
+Read more at [https://docs.codylabs.uk/](https://docs.codylabs.uk/)
 
 ## Installation
 
