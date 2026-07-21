@@ -43,6 +43,13 @@ jobs:
           fi
 
           git fetch --no-tags --depth=1 origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+          expected_v1="$(git ls-remote origin refs/tags/v1 | awk '{print $1}')"
           release_commit="$(git rev-parse "${RELEASE_TAG}^{commit}")"
           git tag --force v1 "$release_commit"
-          git push --force origin refs/tags/v1
+          if [[ -n "$expected_v1" ]]; then
+            git push origin \
+              --force-with-lease="refs/tags/v1:${expected_v1}" \
+              refs/tags/v1
+          else
+            git push origin refs/tags/v1
+          fi

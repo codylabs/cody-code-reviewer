@@ -28,6 +28,11 @@ jobs:
               --silent --show-error --output /dev/null "$url"
           done
 
+          readme="$(curl --fail --location --retry 3 --connect-timeout 10 --max-time 60 \
+            --silent --show-error \
+            https://raw.githubusercontent.com/codylabs/cody-code-reviewer/master/README.md)"
+          grep --fixed-strings --quiet '## Installation' <<< "$readme"
+
           latest_release="$(curl --fail --retry 3 --connect-timeout 10 --max-time 60 --silent --show-error \
             -H "Authorization: Bearer ${GITHUB_TOKEN}" \
             -H "Accept: application/vnd.github+json" \
