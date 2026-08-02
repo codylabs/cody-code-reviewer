@@ -19,7 +19,7 @@ inputs:
   model:
     description: "OpenAI or Anthropic model ID used for the review"
     required: false
-    default: "gpt-5.6-sol"
+    default: "gpt-5.6-luna"
 runs:
   using: "composite"
   steps:
