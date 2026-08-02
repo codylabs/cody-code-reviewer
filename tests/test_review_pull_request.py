@@ -58,5 +58,13 @@ def test_build_review_comment_strips_a_model_echoed_header():
     assert comment == f"{header}\n\nActual review body\n"
 
 
+def test_build_review_comment_strips_repeated_echoed_headers():
+    header = reviewer.REVIEW_HEADER_TEMPLATE.format(model="gpt-5.6-luna")
+    echoed = f"{header}\n\n{header}\n\nReview body"
+    comment = reviewer.build_review_comment(echoed, "gpt-5.6-luna")
+    assert comment.count(header) == 1
+    assert comment == f"{header}\n\nReview body\n"
+
+
 def test_review_header_names_the_model_used_for_the_request():
     assert reviewer.ACTIVE_MODEL == reviewer.config.get_model()

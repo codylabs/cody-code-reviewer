@@ -25,7 +25,7 @@ def build_review_comment(response: str, model_name: str) -> str:
     comment carries exactly one."""
     header = REVIEW_HEADER_TEMPLATE.format(model=model_name)
     body = response.strip()
-    if body.startswith(header):
+    while body.startswith(header):
         body = body[len(header):].lstrip()
     return f"{header}\n\n{body}\n"
 
