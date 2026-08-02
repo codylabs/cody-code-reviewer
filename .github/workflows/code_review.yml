@@ -14,13 +14,15 @@ jobs:
       pull-requests: write
     steps:
       - name: Review pull request
+        # Pinned to a published release SHA: PR-controlled code must never run
+        # with this job's secrets (Cody's own review flagged the uses: ./ form).
         uses: codylabs/cody-code-reviewer@c5316225722a3cf6401e4436ae689138ba6bc053 # v1.3.1
         with:
           pr_number: ${{ github.event.pull_request.number }}
           repository: ${{ github.repository }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-          model: gpt-5.6-sol
+          model: gpt-5.6-luna
           # To switch to Claude, replace the two lines above with:
           # anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           # model: claude-opus-4-8
