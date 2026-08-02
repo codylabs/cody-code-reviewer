@@ -8,22 +8,26 @@ from typing import Optional
 try:
     from . import config
     from .github_client import get_pull_request_data
-    from .model import query_model
+    from .model import MODEL as ACTIVE_MODEL, query_model
 except ImportError:  # Support running this file directly from the action.
     import config
     from github_client import get_pull_request_data
-    from model import query_model
+    from model import MODEL as ACTIVE_MODEL, query_model
 
 REVIEW_HEADER_TEMPLATE = "AI Code Review by Cody (https://docs.codylabs.uk/) · Model: `{model}`"
 
 
-def build_review_comment(response: str) -> str:
+def build_review_comment(response: str, model_name: str) -> str:
     """Compose the posted comment: a deterministic branded header naming the
     review model, then the model's review text. The header is added in code
     rather than requested in the prompt so it cannot be dropped or altered by
-    the model."""
-    header = REVIEW_HEADER_TEMPLATE.format(model=config.get_model())
-    return f"{header}\n\n{response.strip()}\n"
+    the model. A leading header echoed by the model is stripped so the final
+    comment carries exactly one."""
+    header = REVIEW_HEADER_TEMPLATE.format(model=model_name)
+    body = response.strip()
+    if body.startswith(header):
+        body = body[len(header):].lstrip()
+    return f"{header}\n\n{body}\n"
 
 def review_pull_request(repo_name: str, pull_number: int) -> None:
     try:
@@ -51,7 +55,7 @@ def review_pull_request(repo_name: str, pull_number: int) -> None:
                 raise RuntimeError("The configured AI provider returned an empty review.")
             output_path = Path(os.environ.get("REVIEW_OUTPUT", "output.txt"))
             with output_path.open('w', encoding='utf-8') as file:
-                file.write(build_review_comment(response))
+                file.write(build_review_comment(response, ACTIVE_MODEL))
     except Exception as e:
         print(f"Error during review process: {str(e)}", file=sys.stderr)
         raise

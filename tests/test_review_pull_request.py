@@ -43,17 +43,20 @@ def test_review_propagates_failures(monkeypatch):
         reviewer.review_pull_request("codylabs/cody-code-reviewer", 14)
 
 
-def test_build_review_comment_names_the_active_model(monkeypatch):
-    monkeypatch.setenv("MODEL", "gpt-5.6-luna")
-    comment = reviewer.build_review_comment("Body text\n")
+def test_build_review_comment_names_the_active_model():
+    comment = reviewer.build_review_comment("Body text\n", "gpt-5.6-luna")
     first_line = comment.splitlines()[0]
     assert first_line == "AI Code Review by Cody (https://docs.codylabs.uk/) \u00b7 Model: `gpt-5.6-luna`"
     assert comment.endswith("Body text\n")
 
 
-def test_build_review_comment_header_is_deterministic_not_prompted(monkeypatch):
-    monkeypatch.delenv("MODEL", raising=False)
-    monkeypatch.delenv("OPENAI_MODEL", raising=False)
-    comment = reviewer.build_review_comment("AI Code Review by Cody duplicate attempt")
-    assert comment.count("AI Code Review by Cody (https://docs.codylabs.uk/)") == 1
-    assert "`gpt-5.6-luna`" in comment.splitlines()[0]
+def test_build_review_comment_strips_a_model_echoed_header():
+    header = reviewer.REVIEW_HEADER_TEMPLATE.format(model="gpt-5.6-luna")
+    echoed = f"{header}\n\nActual review body"
+    comment = reviewer.build_review_comment(echoed, "gpt-5.6-luna")
+    assert comment.count(header) == 1
+    assert comment == f"{header}\n\nActual review body\n"
+
+
+def test_review_header_names_the_model_used_for_the_request():
+    assert reviewer.ACTIVE_MODEL == reviewer.config.get_model()
