@@ -1,11 +1,11 @@
 import src.config as config
 
 
-def test_default_model_is_current_openai_flagship(monkeypatch):
+def test_default_model_is_luna(monkeypatch):
     monkeypatch.delenv("MODEL", raising=False)
     monkeypatch.delenv("OPENAI_MODEL", raising=False)
 
-    assert config.get_model() == "gpt-5.6-sol"
+    assert config.get_model() == "gpt-5.6-luna"
 
 
 def test_openai_model_environment_variable_remains_supported(monkeypatch):

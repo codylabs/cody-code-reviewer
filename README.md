@@ -44,7 +44,7 @@ jobs:
           repository: ${{ github.repository }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-          model: gpt-5.6-sol
+          model: gpt-5.6-luna
           # To switch to Claude, replace the two lines above with:
           # anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           # model: claude-opus-4-8

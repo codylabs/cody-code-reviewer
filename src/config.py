@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DEFAULT_MODEL = 'gpt-5.6-sol'
+DEFAULT_MODEL = 'gpt-5.6-luna'
 
 
 def get_model() -> str:
