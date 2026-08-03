@@ -127,8 +127,6 @@ def get_pull_request_data(repo_name: str, pull_number: int) -> Optional[PullRequ
             diff_length += len(file_diff)
 
         complete_diff = "".join(diff_parts)
-        if not complete_diff:
-            raise RuntimeError("No reviewable textual diff was found for this pull request.")
         if omitted_files:
             displayed_files = omitted_files[:MAX_OMITTED_FILE_NAMES]
             omitted_summary = (
@@ -149,6 +147,8 @@ def get_pull_request_data(repo_name: str, pull_number: int) -> Optional[PullRequ
             if remaining_count:
                 excluded_summary += f"\n- ... and {remaining_count} more excluded files"
             complete_diff += excluded_summary
+        if not complete_diff:
+            raise RuntimeError("No changed files or textual patches were found for this pull request.")
         if diff_truncated:
             complete_diff += "\n\n[Diff truncated because it exceeded the review size limit.]"
         complete_diff = truncate_with_notice(

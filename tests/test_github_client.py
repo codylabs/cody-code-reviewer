@@ -164,6 +164,33 @@ def test_excluded_paths_are_not_sent_to_the_model(monkeypatch):
     assert "web/app.min.js" in result.diff
 
 
+def test_pull_request_with_only_excluded_files_is_not_an_action_failure(monkeypatch):
+    monkeypatch.setattr(github_client.config, "GITHUB_TOKEN", "token")
+    monkeypatch.setenv("EXCLUDE_PATHS", "generated/**")
+    monkeypatch.setenv("CONTEXT_FILES", "")
+    now = datetime.now(timezone.utc)
+    pull_request = SimpleNamespace(
+        title="Regenerate client",
+        body="",
+        state="open",
+        created_at=now,
+        updated_at=now,
+        base=SimpleNamespace(sha="base-sha"),
+        get_files=lambda: [
+            SimpleNamespace(filename="generated/client.py", patch="generated patch"),
+        ],
+    )
+
+    with patch("src.github_client.Github") as github_cls:
+        repo = github_cls.return_value.get_repo.return_value
+        repo.get_pull.return_value = pull_request
+        result = get_pull_request_data("codylabs/cody-code-reviewer", 14)
+
+    assert "generated patch" not in result.diff
+    assert "Files excluded by review configuration" in result.diff
+    assert "generated/client.py" in result.diff
+
+
 def test_context_is_read_from_trusted_base_commit(monkeypatch):
     monkeypatch.setattr(github_client.config, "GITHUB_TOKEN", "token")
     monkeypatch.setenv("CONTEXT_FILES", "AGENTS.md")
