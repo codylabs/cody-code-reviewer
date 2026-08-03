@@ -31,13 +31,25 @@ runs:
   steps:
     - name: Check pull request context
       run: |
+        failed=0
         if [[ -z "$PR_NUMBER" ]]; then
           echo "::error title=Cody needs a pull request::No pull request number available. Run this action on pull_request events, or pass the pr_number input explicitly."
-          exit 1
+          failed=1
         fi
+        if [[ -z "$REPOSITORY" ]]; then
+          echo "::error title=Cody needs a repository::The repository input resolved empty. Omit it to use the current repository, or pass owner/name explicitly."
+          failed=1
+        fi
+        if [[ -z "$GITHUB_TOKEN" ]]; then
+          echo "::error title=Cody needs a token::The github_token input resolved empty. Omit it to use the workflow token (with pull-requests: write), or pass one explicitly."
+          failed=1
+        fi
+        exit "$failed"
       shell: bash
       env:
         PR_NUMBER: ${{ inputs.pr_number }}
+        REPOSITORY: ${{ inputs.repository }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
 
     - name: Set up Python 3.13
       uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0

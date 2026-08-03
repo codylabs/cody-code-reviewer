@@ -52,6 +52,11 @@ automatically. Pass `pr_number`, `repository` or `github_token` explicitly only 
 need to override them (for example, reviewing a different PR than the one that triggered
 the run).
 
+The job must grant the token `pull-requests: write` (as in the example above), or the
+review cannot be posted. Workflows triggered by pull requests from forks receive a
+read-only token; the example's `if` condition skips fork PRs for that reason, so keep it
+(or supply a `github_token` with write access) if you accept fork contributions.
+
 For supply-chain-sensitive repositories, replace `v1` with the chosen release's full commit SHA.
 
 3. Commit the workflow, create a pull request, and watch Cody post its review.
