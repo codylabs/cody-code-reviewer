@@ -199,6 +199,12 @@ def test_path_exclusions_use_glob_patterns():
     assert not path_is_excluded("src/app.py", patterns)
 
 
+def test_single_star_does_not_cross_directories():
+    patterns = ("src/*",)
+    assert path_is_excluded("src/app.py", patterns)
+    assert not path_is_excluded("src/generated/client.py", patterns)
+
+
 # This test should be run sparingly due to its impact on API rate limits and potential costs.
 
 @pytest.mark.integration

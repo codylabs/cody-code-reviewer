@@ -1,12 +1,14 @@
 name: Automated Code Review by Cody
 
 on:
-  pull_request:
+  # The reviewer needs a provider key and a write-capable PR token. Running the
+  # workflow definition from the protected base branch lets it review forks safely,
+  # provided this job never checks out or executes pull-request-controlled code.
+  pull_request_target:
     types: [opened, synchronize, reopened]
 
 jobs:
   code_review:
-    if: ${{ github.event.pull_request.head.repo.fork == false }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

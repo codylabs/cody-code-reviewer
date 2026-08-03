@@ -5,7 +5,7 @@ inputs:
   # omits them gets empty strings, not an error. Every context-derivable input therefore
   # defaults from the event so the minimal `uses:` workflow works out of the box.
   pr_number:
-    description: "Pull request number; defaults to the number of the PR that triggered the workflow"
+    description: "Pull request number; defaults to the PR that triggered pull_request or pull_request_target"
     required: false
     default: ${{ github.event.pull_request.number }}
   repository:
@@ -64,7 +64,7 @@ runs:
       run: |
         failed=0
         if [[ -z "$PR_NUMBER" ]]; then
-          echo "::error title=Cody needs a pull request::No pull request number available. Run this action on pull_request events, or pass the pr_number input explicitly."
+          echo "::error title=Cody needs a pull request::No pull request number available. Run this action on pull_request_target or pull_request events, or pass the pr_number input explicitly."
           failed=1
         fi
         if [[ -z "$REPOSITORY" ]]; then

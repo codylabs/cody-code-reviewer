@@ -37,13 +37,13 @@ pull-request-controlled code.
 name: Private AI PR Review
 
 on:
-  pull_request:
+  # This event runs the workflow definition from the protected base branch.
+  # Cody never checks out or executes pull-request code.
+  pull_request_target:
     types: [opened, synchronize, reopened]
 
 jobs:
   review:
-    # GitHub gives fork PRs a read-only token, so the review cannot be posted.
-    if: ${{ github.event.pull_request.head.repo.fork == false }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -165,8 +165,9 @@ handling apply.
 For supply-chain-sensitive repositories:
 
 - keep the Action pinned to a full release SHA;
+- use `pull_request_target` and never add a checkout or execute pull-request-controlled
+  code in the secret-bearing review job;
 - keep `contents: read` and `pull-requests: write` as the only job permissions;
-- do not run secret-bearing review jobs against code checked out from untrusted forks;
 - keep review guidance on the protected base branch.
 
 See [SECURITY.md](SECURITY.md) for reporting and supported-version details.

@@ -29,3 +29,24 @@ def test_existing_comment_updates_by_default(monkeypatch):
 
     monkeypatch.setenv("UPDATE_EXISTING_COMMENT", "false")
     assert config.should_update_existing_comment() is False
+
+
+def test_positive_integer_settings_are_validated(monkeypatch):
+    monkeypatch.setenv("MAX_DIFF_CHARS", "120000")
+    assert config.get_positive_int("MAX_DIFF_CHARS", 200_000) == 120000
+
+    monkeypatch.setenv("MAX_DIFF_CHARS", "not-a-number")
+    try:
+        config.get_positive_int("MAX_DIFF_CHARS", 200_000)
+    except RuntimeError as exc:
+        assert str(exc) == "MAX_DIFF_CHARS must be a positive integer."
+    else:
+        raise AssertionError("Expected invalid integer input to fail")
+
+    monkeypatch.setenv("MAX_DIFF_CHARS", "0")
+    try:
+        config.get_positive_int("MAX_DIFF_CHARS", 200_000)
+    except RuntimeError as exc:
+        assert str(exc) == "MAX_DIFF_CHARS must be a positive integer."
+    else:
+        raise AssertionError("Expected non-positive integer input to fail")

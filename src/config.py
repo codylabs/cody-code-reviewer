@@ -42,6 +42,18 @@ def get_review_instructions() -> str:
     return os.getenv("REVIEW_INSTRUCTIONS", "").strip()
 
 
+def get_positive_int(name: str, default: int) -> int:
+    """Return a positive integer setting with a user-facing validation error."""
+    raw_value = os.getenv(name, str(default)).strip()
+    try:
+        value = int(raw_value)
+    except ValueError as exc:
+        raise RuntimeError(f"{name} must be a positive integer.") from exc
+    if value <= 0:
+        raise RuntimeError(f"{name} must be a positive integer.")
+    return value
+
+
 def should_update_existing_comment() -> bool:
     """Whether a new run should replace Cody's previous PR comment."""
     return os.getenv("UPDATE_EXISTING_COMMENT", "true").strip().lower() not in {

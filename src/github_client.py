@@ -1,5 +1,5 @@
 import os
-from fnmatch import fnmatch
+from pathlib import PurePosixPath
 from github import Github
 from github.GithubException import GithubException
 import logging
@@ -11,7 +11,7 @@ try:
 except ImportError:  # Support running this module as a script dependency.
     import config
 
-MAX_DIFF_CHARS = int(os.getenv("MAX_DIFF_CHARS", "200000"))
+MAX_DIFF_CHARS = config.get_positive_int("MAX_DIFF_CHARS", 200_000)
 MAX_DESCRIPTION_CHARS = int(os.getenv("MAX_DESCRIPTION_CHARS", "20000"))
 MAX_CONTEXT_CHARS = int(os.getenv("MAX_CONTEXT_CHARS", "40000"))
 MAX_CONTEXT_FILE_CHARS = 16000
@@ -46,8 +46,9 @@ class PullRequestContext:
 
 
 def path_is_excluded(filename: str, patterns: tuple[str, ...]) -> bool:
-    """Match repository-relative paths against caller-configured glob patterns."""
-    return any(fnmatch(filename, pattern) for pattern in patterns)
+    """Match repository-relative POSIX paths using pathlib glob semantics."""
+    path = PurePosixPath(filename)
+    return any(path.match(pattern) for pattern in patterns)
 
 
 def get_trusted_review_context(repo, pull_request) -> str:
