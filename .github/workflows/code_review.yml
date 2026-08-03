@@ -16,7 +16,7 @@ jobs:
       - name: Review pull request
         # Pinned to a published release SHA: PR-controlled code must never run
         # with this job's secrets (Cody's own review flagged the uses: ./ form).
-        uses: codylabs/cody-code-reviewer@984bc66bdf6b4a91d80b1d85899e13adedd72416 # v1.5.0
+        uses: codylabs/cody-code-reviewer@ef39a140710d8f2e6a0f9b69d3cda2a5f4626a06 # v1.5.1
         with:
           pr_number: ${{ github.event.pull_request.number }}
           repository: ${{ github.repository }}

@@ -38,7 +38,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Review pull request
-        uses: codylabs/cody-code-reviewer@v1
+        uses: codylabs/cody-code-reviewer@ef39a140710d8f2e6a0f9b69d3cda2a5f4626a06 # v1.5.1
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           model: gpt-5.6-luna
@@ -57,7 +57,12 @@ review cannot be posted. Workflows triggered by pull requests from forks receive
 read-only token; the example's `if` condition skips fork PRs for that reason, so keep it
 (or supply a `github_token` with write access) if you accept fork contributions.
 
-For supply-chain-sensitive repositories, replace `v1` with the chosen release's full commit SHA.
+The examples pin the action to a release's full commit SHA, which is the recommended way
+to use any third-party action: the code that reviews your pull requests can never change
+underneath you. New releases are announced on the
+[releases page](https://github.com/codylabs/cody-code-reviewer/releases); update the SHA
+(and its version comment) when you want to adopt one. Referencing the moving `v1` tag also
+works if you prefer automatic updates over supply-chain safety.
 
 3. Commit the workflow, create a pull request, and watch Cody post its review.
 
@@ -70,7 +75,7 @@ Cody works with Anthropic's Claude models as well as OpenAI's. To review with Cl
 
 ```yaml
       - name: Review pull request
-        uses: codylabs/cody-code-reviewer@v1
+        uses: codylabs/cody-code-reviewer@ef39a140710d8f2e6a0f9b69d3cda2a5f4626a06 # v1.5.1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           model: claude-opus-4-8
