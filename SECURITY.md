@@ -22,9 +22,12 @@ coordinate disclosure after a fix is available.
 
 The Action runs inside the consumer's GitHub Actions job. It reads the pull request
 through GitHub's API, sends review material directly to the selected OpenAI or Anthropic
-API, and posts the resulting review through GitHub's API. Cody Labs does not receive or
-store repository code, API keys, or review output.
+API, and posts the resulting review through GitHub's API. The inspected, unmodified
+Action contains no integration that intentionally sends repository code, API keys, or
+review output to a Cody Labs-operated service. The Action code and all installed
+dependencies necessarily run with process-level access to the supplied secrets.
 
 Consumers are responsible for selecting a model provider, configuring that provider's
 data controls, choosing an appropriate runner, and limiting the workflow token's
-permissions.
+permissions. Protect the base branch and require owner or CODEOWNERS review for changes
+to the secret-bearing workflow and dependency pins.

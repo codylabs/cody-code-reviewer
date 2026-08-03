@@ -2,8 +2,10 @@
 
 High-signal pull request reviews using your choice of OpenAI or Anthropic model.
 Cody runs inside your GitHub Actions job and sends the diff directly to the model
-provider using your API key. There is no Cody Labs review server, account, or per-seat
-subscription.
+provider using your API key. The inspected, unmodified Action contains no Cody Labs
+review-service integration, account requirement, or per-seat subscription. Like any
+third-party Action, its code and installed dependencies run with access to the
+environment values and token you provide.
 
 [![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Private_AI_PR_Reviewer-0969da?logo=github)](https://github.com/marketplace/actions/cody-ai-code-reviewer)
 [![Test](https://github.com/codylabs/cody-code-reviewer/actions/workflows/test.yml/badge.svg)](https://github.com/codylabs/cody-code-reviewer/actions/workflows/test.yml)
@@ -169,6 +171,9 @@ For supply-chain-sensitive repositories:
   code in the secret-bearing review job;
 - keep `contents: read` and `pull-requests: write` as the only job permissions;
 - keep review guidance on the protected base branch.
+- protect the default branch and require owner/CODEOWNERS review for changes to the
+  secret-bearing workflow and dependency pins; collaborators who can modify the base
+  workflow can modify what executes with its secrets.
 
 See [SECURITY.md](SECURITY.md) for reporting and supported-version details.
 
