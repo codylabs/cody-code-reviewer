@@ -40,15 +40,17 @@ jobs:
       - name: Review pull request
         uses: codylabs/cody-code-reviewer@v1
         with:
-          pr_number: ${{ github.event.pull_request.number }}
-          repository: ${{ github.repository }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           model: gpt-5.6-luna
           # To switch to Claude, replace the two lines above with:
           # anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           # model: claude-opus-4-8
 ```
+
+The pull request number, repository and GitHub token are read from the workflow context
+automatically. Pass `pr_number`, `repository` or `github_token` explicitly only when you
+need to override them (for example, reviewing a different PR than the one that triggered
+the run).
 
 For supply-chain-sensitive repositories, replace `v1` with the chosen release's full commit SHA.
 
@@ -65,9 +67,6 @@ Cody works with Anthropic's Claude models as well as OpenAI's. To review with Cl
       - name: Review pull request
         uses: codylabs/cody-code-reviewer@v1
         with:
-          pr_number: ${{ github.event.pull_request.number }}
-          repository: ${{ github.repository }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           model: claude-opus-4-8
 ```

@@ -1,15 +1,21 @@
 name: "Cody AI Code Reviewer"
 description: "Review pull requests with OpenAI or Anthropic Claude models"
 inputs:
+  # GitHub does not enforce `required` for composite-action inputs: a workflow that
+  # omits them gets empty strings, not an error. Every context-derivable input therefore
+  # defaults from the event so the minimal `uses:` workflow works out of the box.
   pr_number:
-    description: "Pull request number"
-    required: true
+    description: "Pull request number; defaults to the number of the PR that triggered the workflow"
+    required: false
+    default: ${{ github.event.pull_request.number }}
   repository:
-    description: "Repository name"
-    required: true
+    description: "Repository name; defaults to the repository running the workflow"
+    required: false
+    default: ${{ github.repository }}
   github_token:
-    description: "GitHub token used to read the pull request and post the review"
-    required: true
+    description: "GitHub token used to read the pull request and post the review; defaults to the workflow's token (needs pull-requests: write)"
+    required: false
+    default: ${{ github.token }}
   openai_api_key:
     description: "OpenAI API key; required when using an OpenAI model"
     required: false
@@ -23,6 +29,16 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Check pull request context
+      run: |
+        if [[ -z "$PR_NUMBER" ]]; then
+          echo "::error title=Cody needs a pull request::No pull request number available. Run this action on pull_request events, or pass the pr_number input explicitly."
+          exit 1
+        fi
+      shell: bash
+      env:
+        PR_NUMBER: ${{ inputs.pr_number }}
+
     - name: Set up Python 3.13
       uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:
