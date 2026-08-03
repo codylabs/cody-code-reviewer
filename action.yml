@@ -93,6 +93,10 @@ runs:
       env:
         GITHUB_ACTION_PATH: ${{ github.action_path }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
+        # MODEL is needed here too: the posted header names the review model, and
+        # without it the comment step would stamp the default model regardless of
+        # which model actually produced the review.
+        MODEL: ${{ inputs.model }}
         PR_NUMBER: ${{ inputs.pr_number }}
         REPOSITORY: ${{ inputs.repository }}
         REVIEW_OUTPUT: ${{ runner.temp }}/cody-review-${{ github.run_id }}-${{ github.run_attempt }}.md
