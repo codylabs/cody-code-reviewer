@@ -1,5 +1,5 @@
-name: "Cody AI Code Reviewer"
-description: "Review pull requests with OpenAI or Anthropic Claude models"
+name: "Private AI PR Reviewer by Cody Labs"
+description: "High-signal BYOK pull request reviews that run privately in GitHub Actions"
 inputs:
   # GitHub does not enforce `required` for composite-action inputs: a workflow that
   # omits them gets empty strings, not an error. Every context-derivable input therefore
@@ -37,6 +37,26 @@ inputs:
       more review despite the cap.
     required: false
     default: "0"
+  review_instructions:
+    description: "Optional repository-specific priorities appended by the workflow owner"
+    required: false
+    default: ""
+  exclude_paths:
+    description: "Comma-separated glob patterns excluded from review"
+    required: false
+    default: "node_modules/**,**/node_modules/**,dist/**,**/dist/**,venv/**,**/venv/**,.venv/**,**/.venv/**"
+  context_files:
+    description: "Comma-separated guidance files read from the trusted base commit"
+    required: false
+    default: "AGENTS.md,REVIEW.md,CLAUDE.md,.github/copilot-instructions.md"
+  max_diff_chars:
+    description: "Maximum diff characters sent to the model; use this to cap review cost"
+    required: false
+    default: "200000"
+  update_existing_comment:
+    description: "Replace Cody's previous PR comment on each push instead of adding noise"
+    required: false
+    default: "true"
 runs:
   using: "composite"
   steps:
@@ -107,6 +127,10 @@ runs:
         OPENAI_API_KEY: ${{ inputs.openai_api_key }}
         ANTHROPIC_API_KEY: ${{ inputs.anthropic_api_key }}
         MODEL: ${{ inputs.model }}
+        REVIEW_INSTRUCTIONS: ${{ inputs.review_instructions }}
+        EXCLUDE_PATHS: ${{ inputs.exclude_paths }}
+        CONTEXT_FILES: ${{ inputs.context_files }}
+        MAX_DIFF_CHARS: ${{ inputs.max_diff_chars }}
         PR_NUMBER: ${{ inputs.pr_number }}
         REPOSITORY: ${{ inputs.repository }}
         REVIEW_OUTPUT: ${{ runner.temp }}/cody-review-${{ github.run_id }}-${{ github.run_attempt }}.md
@@ -123,9 +147,10 @@ runs:
         # without it the comment step would stamp the default model regardless of
         # which model actually produced the review.
         MODEL: ${{ inputs.model }}
+        UPDATE_EXISTING_COMMENT: ${{ inputs.update_existing_comment }}
         PR_NUMBER: ${{ inputs.pr_number }}
         REPOSITORY: ${{ inputs.repository }}
         REVIEW_OUTPUT: ${{ runner.temp }}/cody-review-${{ github.run_id }}-${{ github.run_attempt }}.md
 branding:
-  icon: 'award'
-  color: 'green'
+  icon: 'shield'
+  color: 'blue'

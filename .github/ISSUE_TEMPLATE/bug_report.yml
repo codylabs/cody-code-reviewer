@@ -1,0 +1,42 @@
+name: Bug report
+description: Report a reproducible problem with the Action
+title: "Bug: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include API keys, tokens, private code, or security vulnerabilities.
+        Report security issues privately through the Security tab.
+  - type: input
+    id: version
+    attributes:
+      label: Action version or commit SHA
+    validations:
+      required: true
+  - type: input
+    id: event
+    attributes:
+      label: Workflow event
+      placeholder: pull_request / workflow_dispatch / other
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior and sanitized logs
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+    validations:
+      required: true
