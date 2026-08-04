@@ -1,7 +1,7 @@
 import os
 from github import Github
 import logging
-from typing import Optional
+from typing import List, Optional
 from dataclasses import dataclass
 
 try:
@@ -30,6 +30,14 @@ class PullRequest:
     state: str
     created_at: str
     updated_at: str
+    head_sha: str
+
+
+@dataclass
+class PullRequestContext:
+    head_sha: str
+    labels: List[str]
+    comment_bodies: List[str]
 
 def get_pull_request_data(repo_name: str, pull_number: int) -> Optional[PullRequest]:
     if not config.GITHUB_TOKEN:
@@ -102,7 +110,8 @@ def get_pull_request_data(repo_name: str, pull_number: int) -> Optional[PullRequ
             diff=complete_diff,
             state=pr.state,
             created_at=pr.created_at.isoformat(),
-            updated_at=pr.updated_at.isoformat()
+            updated_at=pr.updated_at.isoformat(),
+            head_sha=pr.head.sha,
         )
         logging.info(f"Successfully retrieved PR data for {repo_name} PR #{pull_number}")
         return pr_data
@@ -111,3 +120,42 @@ def get_pull_request_data(repo_name: str, pull_number: int) -> Optional[PullRequ
         raise RuntimeError(
             f"Unable to fetch pull request data for {repo_name}#{pull_number}."
         ) from exc
+
+
+def get_pull_request_context(repo_name: str, pull_number: int) -> PullRequestContext:
+    """Fetch the state needed to decide whether Cody should review again:
+    the current head SHA, the pull request's labels (for the cap override),
+    and the body of every issue comment already posted (to count rounds and
+    check whether the cap notice already went out)."""
+    if not config.GITHUB_TOKEN:
+        raise RuntimeError("GITHUB_TOKEN is required to fetch pull request data.")
+
+    try:
+        g = Github(config.GITHUB_TOKEN)
+        repo = g.get_repo(repo_name)
+        pr = repo.get_pull(pull_number)
+        labels = [label.name for label in pr.get_labels()]
+        comment_bodies = [comment.body or "" for comment in pr.get_issue_comments()]
+        return PullRequestContext(
+            head_sha=pr.head.sha,
+            labels=labels,
+            comment_bodies=comment_bodies,
+        )
+    except Exception as exc:
+        logging.error("Failed to fetch pull request context", exc_info=True)
+        raise RuntimeError(
+            f"Unable to fetch pull request context for {repo_name}#{pull_number}."
+        ) from exc
+
+
+def post_issue_comment(repo_name: str, pull_number: int, body: str) -> None:
+    """Post a plain issue comment on the pull request, used for the one-off
+    cap-reached notice. The full AI review is posted separately by
+    comment_on_pr.py from the review output file."""
+    if not config.GITHUB_TOKEN:
+        raise RuntimeError("GITHUB_TOKEN is required to post a pull request comment.")
+
+    g = Github(config.GITHUB_TOKEN)
+    repo = g.get_repo(repo_name)
+    pr = repo.get_pull(pull_number)
+    pr.create_issue_comment(body)

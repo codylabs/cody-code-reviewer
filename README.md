@@ -92,6 +92,44 @@ Any model name starting with claude- is sent to Anthropic; anything else goes to
 
 The full model list is at https://platform.claude.com/docs/en/about-claude/models/overview.
 
+## Capping review rounds
+
+Cody reviews again on every push to a pull request. That is usually productive, but a
+fix-push-review loop has no natural stopping point on its own, and on a long back-and-forth
+it can run for hours. Set `max_review_rounds` to stop it after a fixed number of reviews:
+
+```yaml
+      - name: Review pull request
+        uses: codylabs/cody-code-reviewer@ef39a140710d8f2e6a0f9b69d3cda2a5f4626a06 # v1.5.1
+        with:
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          model: gpt-5.6-luna
+          max_review_rounds: 2
+```
+
+`max_review_rounds` defaults to `0`, which means unlimited: today's behavior, unchanged for
+any workflow that does not set it. Once Cody has posted that many reviews on a pull request,
+it skips the review on the next push, exits successfully (a skipped review is not a failed
+check), and posts a short note once explaining the cap was reached and how to get another
+review. It does not repeat that note on every push after.
+
+Round counting reads a hidden marker Cody embeds in each review it posts (an HTML comment,
+invisible when rendered), not the visible header text, since that text can change between
+versions or be edited. A pull request with reviews from before this feature shipped, which
+predate the marker, still counts each of those older reviews toward the cap; Cody says so in
+the cap note when that applies.
+
+Cody also skips a review outright, cap or no cap, when the pull request's head commit has
+not changed since its last review: nothing new to look at. Reviews from before this feature
+shipped do not record a head sha, so this check only takes effect once at least one review
+carrying the marker has been posted.
+
+To get one more review despite the cap, add the `cody:force-review` label to the pull
+request, or re-run the workflow manually. Either one grants exactly one more review, even
+if the head commit has not changed; it is not a standing bypass, so a label left on the
+pull request stops helping once that one extra review has been posted, and repeated manual
+re-runs of the same workflow run do not stack.
+
 ## GitLab & Azure DevOps (Cody Pro)
 
 Cody Pro brings the same AI code reviews to GitLab merge requests and Azure DevOps pull requests, with ready-made pipeline templates for both platforms and support for the same OpenAI and Claude models. It's a one-time purchase:
