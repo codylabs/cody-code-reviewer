@@ -38,7 +38,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Review pull request
-        uses: codylabs/cody-code-reviewer@ef39a140710d8f2e6a0f9b69d3cda2a5f4626a06 # v1.5.1
+        uses: codylabs/cody-code-reviewer@b44126ce4a0de75f449281504b1226d94205ecb9 # v1.6.0
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           model: gpt-5.6-luna
@@ -75,7 +75,7 @@ Cody works with Anthropic's Claude models as well as OpenAI's. To review with Cl
 
 ```yaml
       - name: Review pull request
-        uses: codylabs/cody-code-reviewer@ef39a140710d8f2e6a0f9b69d3cda2a5f4626a06 # v1.5.1
+        uses: codylabs/cody-code-reviewer@b44126ce4a0de75f449281504b1226d94205ecb9 # v1.6.0
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           model: claude-opus-4-8
@@ -100,7 +100,7 @@ it can run for hours. Set `max_review_rounds` to stop it after a fixed number of
 
 ```yaml
       - name: Review pull request
-        uses: codylabs/cody-code-reviewer@ef39a140710d8f2e6a0f9b69d3cda2a5f4626a06 # v1.5.1
+        uses: codylabs/cody-code-reviewer@b44126ce4a0de75f449281504b1226d94205ecb9 # v1.6.0
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           model: gpt-5.6-luna
