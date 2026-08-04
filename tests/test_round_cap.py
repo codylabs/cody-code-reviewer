@@ -46,6 +46,13 @@ def test_parse_max_rounds_rejects_non_integers():
         parse_max_rounds("two")
 
 
+def test_parse_max_rounds_rejects_negative_values():
+    import pytest
+
+    with pytest.raises(RuntimeError, match="must be 0 or a positive integer"):
+        parse_max_rounds("-1")
+
+
 # --- marker extraction and round counting ---
 
 def test_extract_marker_sha_reads_the_embedded_sha():
@@ -137,13 +144,13 @@ def test_decide_default_unlimited_always_reviews():
 def test_decide_override_label_reviews_despite_the_cap():
     comments = [marked_review("sha1"), marked_review("sha2")]
     result = decide(max_rounds=2, comment_bodies=comments, labels=["cody:force-review"], head_sha="sha3")
-    assert result == RoundCapDecision(True, "override label present")
+    assert result == RoundCapDecision(True, "override label present, bonus round (2/2)")
 
 
 def test_decide_manual_rerun_reviews_despite_the_cap():
     comments = [marked_review("sha1"), marked_review("sha2")]
     result = decide(max_rounds=2, comment_bodies=comments, labels=[], head_sha="sha3", run_attempt="2")
-    assert result == RoundCapDecision(True, "manual workflow re-run")
+    assert result == RoundCapDecision(True, "manual workflow re-run, bonus round (2/2)")
 
 
 def test_decide_manual_rerun_reviews_despite_an_unchanged_head_commit():
@@ -151,7 +158,22 @@ def test_decide_manual_rerun_reviews_despite_an_unchanged_head_commit():
     # commits, which the head-sha-unchanged check would otherwise skip.
     comments = [marked_review("sha1")]
     result = decide(max_rounds=0, comment_bodies=comments, labels=[], head_sha="sha1", run_attempt="2")
-    assert result == RoundCapDecision(True, "manual workflow re-run")
+    assert result == RoundCapDecision(True, "manual workflow re-run (head unchanged, no cap configured)")
+
+
+def test_decide_override_label_grants_only_one_bonus_round_then_caps_again():
+    # A label left on the pull request must not bypass the cap forever: it
+    # is consumed by the one bonus round and then behaves like no override
+    # is present until the head sha moves again.
+    comments = [marked_review("sha1"), marked_review("sha2"), marked_review("sha3")]
+    result = decide(max_rounds=2, comment_bodies=comments, labels=["cody:force-review"], head_sha="sha4")
+    assert result == RoundCapDecision(False, "cap reached (3/2)")
+
+
+def test_decide_manual_rerun_grants_only_one_bonus_round_even_across_repeated_reruns():
+    comments = [marked_review("sha1"), marked_review("sha2"), marked_review("sha3")]
+    result = decide(max_rounds=2, comment_bodies=comments, labels=[], head_sha="sha4", run_attempt="5")
+    assert result == RoundCapDecision(False, "cap reached (3/2)")
 
 
 def test_decide_first_attempt_is_not_treated_as_a_manual_rerun():
@@ -217,7 +239,7 @@ def test_check_round_cap_manual_rerun_reviews_and_posts_no_notice(monkeypatch):
 
     result = check_round_cap("codylabs/cody-code-reviewer", 14, "2", "2")
 
-    assert result == RoundCapDecision(True, "manual workflow re-run")
+    assert result == RoundCapDecision(True, "manual workflow re-run, bonus round (2/2)")
     assert posted == []
 
 

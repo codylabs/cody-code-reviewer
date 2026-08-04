@@ -42,14 +42,19 @@ class RoundCapDecision:
 def parse_max_rounds(raw: Optional[str]) -> int:
     """Parse the max_review_rounds input. Empty or 0 means unlimited, which
     is also today's behaviour, so existing workflows that do not set this
-    input see no change."""
+    input see no change. Negative values are rejected rather than silently
+    treated as unlimited, so a typo in the input does not quietly disable
+    the cap."""
     raw = (raw or "").strip()
     if not raw:
         return 0
     try:
-        return int(raw)
+        value = int(raw)
     except ValueError:
         raise RuntimeError(f"max_review_rounds must be an integer, got {raw!r}.")
+    if value < 0:
+        raise RuntimeError(f"max_review_rounds must be 0 or a positive integer, got {raw!r}.")
+    return value
 
 
 def extract_marker_sha(comment_body: str) -> Optional[str]:
@@ -122,22 +127,41 @@ def decide(
     head_sha: str,
     run_attempt: Optional[str] = None,
 ) -> RoundCapDecision:
+    # An override (the label, or a manual re-run) grants exactly one review
+    # beyond whatever the cap/unchanged-head checks would otherwise allow.
+    # It does NOT disable those checks outright: a label left on the pull
+    # request would otherwise bypass the cap forever on every later push,
+    # and a re-run would otherwise let the same commit be reviewed as many
+    # times as someone clicks re-run. Both are exactly the runaway-review
+    # loop this feature exists to stop, so the bonus is one-shot: once the
+    # extra round is posted, rounds_so_far reflects it and the override
+    # stops firing until the head sha moves again.
     if has_override_label(labels):
-        return RoundCapDecision(True, "override label present")
-
-    if is_manual_rerun(run_attempt):
-        return RoundCapDecision(True, "manual workflow re-run")
+        override_active, override_reason = True, "override label present"
+    elif is_manual_rerun(run_attempt):
+        override_active, override_reason = True, "manual workflow re-run"
+    else:
+        override_active, override_reason = False, ""
 
     latest_sha = latest_reviewed_sha(comment_bodies)
-    if latest_sha is not None and latest_sha == head_sha:
+    head_unchanged = latest_sha is not None and latest_sha == head_sha
+    if head_unchanged and not override_active:
         return RoundCapDecision(False, "head commit unchanged since the last review")
 
     if max_rounds <= 0:
+        if head_unchanged:
+            # Only reachable via an override, since the plain unchanged-head
+            # check above already returned. Say so, it's more useful in logs
+            # than a bare "no cap configured".
+            return RoundCapDecision(True, f"{override_reason} (head unchanged, no cap configured)")
         return RoundCapDecision(True, "no cap configured")
 
     rounds_so_far = count_review_rounds(comment_bodies)
-    if rounds_so_far < max_rounds:
-        return RoundCapDecision(True, f"under cap ({rounds_so_far}/{max_rounds})")
+    limit = max_rounds + 1 if override_active else max_rounds
+    if rounds_so_far < limit:
+        if rounds_so_far < max_rounds:
+            return RoundCapDecision(True, f"under cap ({rounds_so_far}/{max_rounds})")
+        return RoundCapDecision(True, f"{override_reason}, bonus round ({rounds_so_far}/{max_rounds})")
 
     return RoundCapDecision(False, f"cap reached ({rounds_so_far}/{max_rounds})")
 

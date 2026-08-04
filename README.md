@@ -120,11 +120,15 @@ predate the marker, still counts each of those older reviews toward the cap; Cod
 the cap note when that applies.
 
 Cody also skips a review outright, cap or no cap, when the pull request's head commit has
-not changed since its last review: nothing new to look at.
+not changed since its last review: nothing new to look at. Reviews from before this feature
+shipped do not record a head sha, so this check only takes effect once at least one review
+carrying the marker has been posted.
 
-To get one more review despite the cap, on a long-lived branch that is still accumulating
-commits, add the `cody:force-review` label to the pull request, or re-run the workflow
-manually. Either one produces a fresh review even after the cap has been reached.
+To get one more review despite the cap, add the `cody:force-review` label to the pull
+request, or re-run the workflow manually. Either one grants exactly one more review, even
+if the head commit has not changed; it is not a standing bypass, so a label left on the
+pull request stops helping once that one extra review has been posted, and repeated manual
+re-runs of the same workflow run do not stack.
 
 ## GitLab & Azure DevOps (Cody Pro)
 
