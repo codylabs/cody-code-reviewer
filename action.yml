@@ -26,6 +26,17 @@ inputs:
     description: "OpenAI or Anthropic model ID used for the review"
     required: false
     default: "gpt-5.6-luna"
+  max_review_rounds:
+    description: >-
+      Maximum number of reviews Cody will post on a single pull request.
+      0 (the default) means unlimited, which matches the action's behavior
+      before this input existed: existing workflows that do not set it see
+      no change. Once the cap is reached Cody posts a short note once and
+      exits successfully without reviewing again. Add the `cody:force-review`
+      label to the pull request, or re-run the workflow manually, to get one
+      more review despite the cap.
+    required: false
+    default: "0"
 runs:
   using: "composite"
   steps:
@@ -72,7 +83,21 @@ runs:
         GITHUB_ACTION_PATH: ${{ github.action_path }}
         RUNNER_OS: ${{ runner.os }}
 
+    - name: Check review round cap
+      id: round_cap
+      run: |
+        "$CODY_PYTHON" "$GITHUB_ACTION_PATH/src/round_cap.py" "$PR_NUMBER" "$REPOSITORY"
+      shell: bash
+      env:
+        GITHUB_ACTION_PATH: ${{ github.action_path }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+        MAX_REVIEW_ROUNDS: ${{ inputs.max_review_rounds }}
+        PR_NUMBER: ${{ inputs.pr_number }}
+        REPOSITORY: ${{ inputs.repository }}
+        RUN_ATTEMPT: ${{ github.run_attempt }}
+
     - name: Run Code Review Model
+      if: steps.round_cap.outputs.should_review == 'true'
       run: |
         "$CODY_PYTHON" "$GITHUB_ACTION_PATH/src/review_pull_request.py" "$PR_NUMBER" "$REPOSITORY"
       shell: bash
@@ -87,6 +112,7 @@ runs:
         REVIEW_OUTPUT: ${{ runner.temp }}/cody-review-${{ github.run_id }}-${{ github.run_attempt }}.md
 
     - name: Comment on Pull Request
+      if: steps.round_cap.outputs.should_review == 'true'
       run: |
         "$CODY_PYTHON" "$GITHUB_ACTION_PATH/src/comment_on_pr.py" "$PR_NUMBER" "$REPOSITORY"
       shell: bash
