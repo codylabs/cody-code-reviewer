@@ -175,6 +175,7 @@ def test_pull_request_with_only_excluded_files_is_not_an_action_failure(monkeypa
         state="open",
         created_at=now,
         updated_at=now,
+        head=SimpleNamespace(sha="head-sha"),
         base=SimpleNamespace(sha="base-sha"),
         get_files=lambda: [
             SimpleNamespace(filename="generated/client.py", patch="generated patch"),
@@ -230,6 +231,33 @@ def test_single_star_does_not_cross_directories():
     patterns = ("src/*",)
     assert path_is_excluded("src/app.py", patterns)
     assert not path_is_excluded("src/generated/client.py", patterns)
+    assert not path_is_excluded("a/src/app.py", patterns)
+
+
+def test_double_star_excludes_files_nested_more_than_one_level_deep():
+    # Regression test: PurePosixPath.match() treats '**' as a plain '*',
+    # so it only ever excluded direct children of node_modules and silently
+    # let everything nested deeper through review.
+    patterns = ("node_modules/**",)
+    assert path_is_excluded("node_modules/lodash/index.js", patterns)
+    assert path_is_excluded("node_modules/a/b/c.js", patterns)
+
+
+def test_leading_double_star_also_matches_zero_directories():
+    patterns = ("**/node_modules/**",)
+    assert path_is_excluded("a/b/node_modules/x.js", patterns)
+    assert path_is_excluded("node_modules/x.js", patterns)
+
+
+def test_leading_double_star_matches_root_level_files():
+    patterns = ("**/*.min.js",)
+    assert path_is_excluded("web/app.min.js", patterns)
+    assert path_is_excluded("app.min.js", patterns)
+
+
+def test_trailing_double_star_does_not_match_an_unrelated_prefix():
+    patterns = ("dist/**",)
+    assert not path_is_excluded("src/dist_utils.py", patterns)
 
 
 # This test should be run sparingly due to its impact on API rate limits and potential costs.

@@ -92,6 +92,7 @@ def test_workflow_owner_can_add_review_priorities(monkeypatch, tmp_path):
         description="",
         diff="diff",
         context="",
+        head_sha="billing-head-sha",
     )
     monkeypatch.setenv("REVIEW_OUTPUT", str(output_path))
     monkeypatch.setenv("REVIEW_INSTRUCTIONS", "Check idempotency and refund handling.")

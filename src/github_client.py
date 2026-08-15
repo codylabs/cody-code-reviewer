@@ -1,5 +1,6 @@
 import os
-from pathlib import PurePosixPath
+import re
+from functools import lru_cache
 from github import Github
 from github.GithubException import GithubException
 import logging
@@ -45,10 +46,87 @@ class PullRequestContext:
     comment_bodies: List[str]
 
 
+_GLOBSTAR = "**"
+
+
+def _translate_path_segment(segment: str) -> str:
+    """Translate one path segment (never containing '/') to a regex fragment.
+    '*' and '?' are bounded to this segment; they must not match '/'."""
+    pieces = []
+    for char in segment:
+        if char == "*":
+            pieces.append("[^/]*")
+        elif char == "?":
+            pieces.append("[^/]")
+        else:
+            pieces.append(re.escape(char))
+    return "".join(pieces)
+
+
+@lru_cache(maxsize=None)
+def _compile_glob(pattern: str) -> re.Pattern:
+    """Translate a shell-style glob into a regex anchored to the full path.
+
+    Written by hand instead of using PurePosixPath.match(): that method
+    treats '**' as a non-recursive '*' on every Python version (only
+    full_match() in 3.13+ does recursive '**'), and it right-anchors
+    relative patterns instead of matching the whole path. Together those
+    mean the default pattern 'node_modules/**' never excludes anything
+    nested more than one level deep, e.g. node_modules/lodash/index.js is
+    not excluded even though it obviously should be.
+
+    Semantics: '**' is recursive, and matches zero or more path segments,
+    only when it stands alone as an entire path segment: 'a/**/b' matches
+    'a/b' as well as 'a/x/y/b', and 'a/**' also matches plain 'a'. Anywhere
+    else, '*' and '?' behave like normal shell globbing and never cross a
+    '/'.
+    """
+    segments = pattern.split("/")
+
+    # Collapse a run of consecutive '**' segments (e.g. from '**/**') into
+    # a single globstar node.
+    nodes: list[tuple[str, str]] = []  # ("lit", regex) or ("glob", "")
+    i = 0
+    while i < len(segments):
+        segment = segments[i]
+        if segment == _GLOBSTAR:
+            while i < len(segments) and segments[i] == _GLOBSTAR:
+                i += 1
+            nodes.append(("glob", ""))
+        else:
+            nodes.append(("lit", _translate_path_segment(segment)))
+            i += 1
+
+    parts = []
+    for index, (kind, regex) in enumerate(nodes):
+        if kind == "lit":
+            if parts and nodes[index - 1][0] == "lit":
+                parts.append("/")
+            parts.append(regex)
+            continue
+
+        is_start = index == 0
+        is_end = index == len(nodes) - 1
+        if is_start and is_end:
+            # The whole pattern is '**': match anything, including nothing.
+            parts.append(".*")
+        elif is_start:
+            # '**/...': zero or more leading directories, including none.
+            parts.append("(?:.*/)?")
+        elif is_end:
+            # '.../**': zero or more trailing directories, including none.
+            parts.append("(?:/.*)?")
+        else:
+            # '.../**/...': zero or more directories between two literal
+            # segments, including none, e.g. 'a/**/b' also matches 'a/b'.
+            parts.append("(?:/.*)?/")
+
+    return re.compile("^" + "".join(parts) + "$")
+
+
 def path_is_excluded(filename: str, patterns: tuple[str, ...]) -> bool:
-    """Match repository-relative POSIX paths using pathlib glob semantics."""
-    path = PurePosixPath(filename)
-    return any(path.match(pattern) for pattern in patterns)
+    """Match a repository-relative POSIX path against caller glob patterns."""
+    return any(_compile_glob(pattern).match(filename) for pattern in patterns)
 
 
 def get_trusted_review_context(repo, pull_request) -> str:
