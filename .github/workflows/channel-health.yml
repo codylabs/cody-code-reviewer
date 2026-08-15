@@ -23,7 +23,7 @@ jobs:
             "https://github.com/marketplace/actions/cody-ai-code-reviewer" \
             "https://docs.codylabs.uk/" \
             "https://codylabs.uk/" \
-            "https://codylabs.gumroad.com/l/cody-pro"; do
+            "https://buy.polar.sh/polar_cl_1Gr4pDASt4UEK22UzlIFz5lruoxKEuG99gtL844iydI"; do
             curl --fail --location --retry 3 --connect-timeout 10 --max-time 60 \
               --silent --show-error --output /dev/null "$url"
           done

@@ -52,7 +52,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Review pull request
-        uses: codylabs/cody-code-reviewer@b44126ce4a0de75f449281504b1226d94205ecb9 # v1.6.0
+        uses: codylabs/cody-code-reviewer@5ec18da9b75541f5ce2b33edcfb8a7c666551b31 # v1.7.0
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           model: gpt-5.6-luna
@@ -72,7 +72,7 @@ Replace the provider inputs in the install example:
 
 ```yaml
       - name: Review pull request
-        uses: codylabs/cody-code-reviewer@b44126ce4a0de75f449281504b1226d94205ecb9 # v1.6.0
+        uses: codylabs/cody-code-reviewer@5ec18da9b75541f5ce2b33edcfb8a7c666551b31 # v1.7.0
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           model: claude-opus-4-8
@@ -111,7 +111,7 @@ it can run for hours. Set `max_review_rounds` to stop it after a fixed number of
 
 ```yaml
       - name: Review pull request
-        uses: codylabs/cody-code-reviewer@b44126ce4a0de75f449281504b1226d94205ecb9 # v1.6.0
+        uses: codylabs/cody-code-reviewer@5ec18da9b75541f5ce2b33edcfb8a7c666551b31 # v1.7.0
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           model: gpt-5.6-luna

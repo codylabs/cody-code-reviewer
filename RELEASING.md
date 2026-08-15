@@ -33,9 +33,10 @@ describe or embed the action.
 The GitLab and Azure DevOps products do NOT consume this action; behavior fixes here
 usually need porting there:
 
-- [ ] `codylabs/cody-pro` (GitLab MR + Azure DevOps scripts, Python, sold via Gumroad):
+- [ ] `codylabs/cody-pro` (GitLab MR + Azure DevOps scripts, Python, sold via Polar, one-time
+      US$39: https://buy.polar.sh/polar_cl_1Gr4pDASt4UEK22UzlIFz5lruoxKEuG99gtL844iydI):
       active branch is `feat/azure-marketplace-extension`, not main. Port prompt/header/
-      output-format changes; its customers install by script, so README + Gumroad listing
+      output-format changes; its customers install by script, so README + Polar listing
       copy may also need the same doc updates.
 - [ ] `codylabs/cody-pro-azure-devops` (VS Marketplace extension, BYOL): port the same
       changes; bump `vss-extension.json` AND `task.json` versions together (Marketplace
