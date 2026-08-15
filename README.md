@@ -1,37 +1,51 @@
-## About
+# Private AI PR Reviewer by Cody Labs
 
-Cody will automatically summarize and code review your changes on every pull request using OpenAI or Anthropic Claude models.
+High-signal pull request reviews using your choice of OpenAI or Anthropic model.
+Cody runs inside your GitHub Actions job and sends the diff directly to the model
+provider using your API key. The inspected, unmodified Action contains no Cody Labs
+review-service integration, account requirement, or per-seat subscription. Like any
+third-party Action, its code and installed dependencies run with access to the
+environment values and token you provide.
 
-Note that an OpenAI or Anthropic API key is required, depending on the model you choose.
+[![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Private_AI_PR_Reviewer-0969da?logo=github)](https://github.com/marketplace/actions/cody-ai-code-reviewer)
+[![Test](https://github.com/codylabs/cody-code-reviewer/actions/workflows/test.yml/badge.svg)](https://github.com/codylabs/cody-code-reviewer/actions/workflows/test.yml)
+[![Latest release](https://img.shields.io/github/v/release/codylabs/cody-code-reviewer)](https://github.com/codylabs/cody-code-reviewer/releases/latest)
 
-Read more at [https://docs.codylabs.uk/](https://docs.codylabs.uk/)
+## Why this reviewer
 
-> **Using GitLab or Azure DevOps?** This action is for GitHub. [Cody Pro for GitLab and Azure DevOps](https://codylabs.gumroad.com/l/cody-pro) provides the same OpenAI and Claude-powered reviews with ready-made pipeline templates.
+- **Private execution:** your code goes from your GitHub runner to the model provider
+  you select. Cody Labs does not receive or store it.
+- **Bring your own key:** pay the provider's API price instead of another per-developer
+  subscription.
+- **Repository-aware:** Cody reads `AGENTS.md`, `REVIEW.md`, `CLAUDE.md`, and
+  `.github/copilot-instructions.md` from the trusted base commit when present.
+- **High signal by default:** findings prioritize correctness, security, reliability,
+  and performance, with severity, impact, and a concrete fix.
+- **No timeline spam:** later pushes update Cody's existing review comment.
+- **Cost control:** exclude generated paths and cap the amount of diff sent for review.
 
-## Installation
+This project dogfoods its own Action. In
+[this real review](https://github.com/codylabs/cody-code-reviewer/pull/24#issuecomment-5157065670),
+Cody caught a workflow change that could have exposed repository secrets to
+pull-request-controlled code.
 
-Installation is as simple as adding your AI provider API key and a GitHub Actions workflow file to your repository.
+## Install
 
-1. Add `OPENAI_API_KEY` (or `ANTHROPIC_API_KEY` for Claude models) as a repository secret under **Settings → Secrets and variables → Actions**.
-
-<img src="openai.png" alt="Open API Api Key" width="500px">
-
-<img src="repo_secrets.png" alt="Add secrets" width="800px">
-
-`GITHUB_TOKEN` does not need to be added because GitHub creates it automatically for each workflow run.
-
+1. Add `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` under
+   **Settings → Secrets and variables → Actions**.
 2. Create `.github/workflows/cody-review.yml`:
 
 ```yaml
-name: Automated Code Review by Cody
+name: Private AI PR Review
 
 on:
-  pull_request:
+  # This event runs the workflow definition from the protected base branch.
+  # Cody never checks out or executes pull-request code.
+  pull_request_target:
     types: [opened, synchronize, reopened]
 
 jobs:
-  code_review:
-    if: ${{ github.event.pull_request.head.repo.fork == false }}
+  review:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -42,36 +56,19 @@ jobs:
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           model: gpt-5.6-luna
-          # To switch to Claude, replace the two lines above with:
-          # anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          # model: claude-opus-4-8
 ```
 
-The pull request number, repository and GitHub token are read from the workflow context
-automatically. Pass `pr_number`, `repository` or `github_token` explicitly only when you
-need to override them (for example, reviewing a different PR than the one that triggered
-the run).
+Commit the workflow and open a pull request. Cody posts a review and updates that same
+comment whenever the pull request changes.
 
-The job must grant the token `pull-requests: write` (as in the example above), or the
-review cannot be posted. Workflows triggered by pull requests from forks receive a
-read-only token; the example's `if` condition skips fork PRs for that reason, so keep it
-(or supply a `github_token` with write access) if you accept fork contributions.
+The example pins an immutable release commit so the Action cannot change underneath
+you. New release SHAs are published on the
+[releases page](https://github.com/codylabs/cody-code-reviewer/releases). You can use
+`codylabs/cody-code-reviewer@v1` instead if you prefer automatic compatible updates.
 
-The examples pin the action to a release's full commit SHA, which is the recommended way
-to use any third-party action: the code that reviews your pull requests can never change
-underneath you. New releases are announced on the
-[releases page](https://github.com/codylabs/cody-code-reviewer/releases); update the SHA
-(and its version comment) when you want to adopt one. Referencing the moving `v1` tag also
-works if you prefer automatic updates over supply-chain safety.
+## Use Claude
 
-3. Commit the workflow, create a pull request, and watch Cody post its review.
-
-## Using Claude models
-
-Cody works with Anthropic's Claude models as well as OpenAI's. To review with Claude:
-
-1. Add ANTHROPIC_API_KEY as a repo secret (create a key at https://platform.claude.com/).
-2. Set MODEL to a Claude model in the "Run Code Review Model" step of your workflow:
+Replace the provider inputs in the install example:
 
 ```yaml
       - name: Review pull request
@@ -81,16 +78,30 @@ Cody works with Anthropic's Claude models as well as OpenAI's. To review with Cl
           model: claude-opus-4-8
 ```
 
-Any model name starting with claude- is sent to Anthropic; anything else goes to OpenAI, so you only need the API key for the provider you pick.
+Model names beginning with `claude` use Anthropic. Other model names use OpenAI.
 
-| Model | Best for |
-| --- | --- |
-| claude-fable-5 | Highest-capability, long-running reviews |
-| claude-opus-4-8 | Complex code reviews — recommended starting point |
-| claude-sonnet-5 | Strong speed and intelligence balance |
-| claude-haiku-4-5 | Fastest and cheapest |
+## Tailor reviews to your repository
 
-The full model list is at https://platform.claude.com/docs/en/about-claude/models/overview.
+Cody automatically reads these files from the pull request's **base commit**, so a pull
+request cannot alter its own review rules:
+
+- `AGENTS.md`
+- `REVIEW.md`
+- `CLAUDE.md`
+- `.github/copilot-instructions.md`
+
+You can also set priorities directly in the workflow:
+
+```yaml
+        with:
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          model: gpt-5.6-luna
+          review_instructions: |
+            Treat authorization and tenant isolation as release blockers.
+            Ignore formatting unless it changes behavior.
+          exclude_paths: "dist/**,**/dist/**,docs/generated/**,**/*.min.js"
+          max_diff_chars: "120000"
+```
 
 ## Capping review rounds
 
@@ -130,59 +141,65 @@ if the head commit has not changed; it is not a standing bypass, so a label left
 pull request stops helping once that one extra review has been posted, and repeated manual
 re-runs of the same workflow run do not stack.
 
-## GitLab & Azure DevOps (Cody Pro)
+## Inputs
 
-Cody Pro brings the same AI code reviews to GitLab merge requests and Azure DevOps pull requests, with ready-made pipeline templates for both platforms and support for the same OpenAI and Claude models. It's a one-time purchase:
+| Input | Default | Purpose |
+| --- | --- | --- |
+| `openai_api_key` | — | Required for OpenAI models |
+| `anthropic_api_key` | — | Required for Claude models |
+| `model` | `gpt-5.6-luna` | Provider model ID |
+| `max_review_rounds` | `0` (unlimited) | Stop reviewing a pull request after this many reviews |
+| `review_instructions` | empty | Extra priorities supplied by the workflow owner |
+| `exclude_paths` | dependency/build directories | Comma-separated path globs |
+| `context_files` | common instruction files | Comma-separated trusted guidance files |
+| `max_diff_chars` | `200000` | Hard cap on diff characters sent to the model |
+| `update_existing_comment` | `true` | Update the previous Cody review instead of adding another |
+| `pr_number` | current PR | Override for non-standard workflows |
+| `repository` | current repository | Override target as `owner/name` |
+| `github_token` | workflow token | Token used to read and comment on the PR |
 
-**[Get Cody Pro on Gumroad](https://codylabs.gumroad.com/l/cody-pro)**
+## Security and privacy
 
-<img src="cody_review_2.png" alt="PR Code Review Image" width="640px">
+Cody Labs does not operate a review backend. The Action runs on the selected GitHub
+runner and calls OpenAI or Anthropic directly. Your chosen provider's API terms and data
+handling apply.
 
-<img src="cody_review_1.png" alt="PR Code Review Image" width="640px">
+For supply-chain-sensitive repositories:
+
+- keep the Action pinned to a full release SHA;
+- use `pull_request_target` and never add a checkout or execute pull-request-controlled
+  code in the secret-bearing review job;
+- keep `contents: read` and `pull-requests: write` as the only job permissions;
+- keep review guidance on the protected base branch.
+- protect the default branch and require owner/CODEOWNERS review for changes to the
+  secret-bearing workflow and dependency pins; collaborators who can modify the base
+  workflow can modify what executes with its secrets.
+
+See [SECURITY.md](SECURITY.md) for reporting and supported-version details.
+
+## GitLab and Azure DevOps
+
+[Cody Pro](https://buy.polar.sh/polar_cl_1Gr4pDASt4UEK22UzlIFz5lruoxKEuG99gtL844iydI) packages
+the same private, BYOK workflow for GitLab merge requests and Azure DevOps pull requests. It is
+a one-time US$39 purchase, not a subscription.
 
 ## Development
 
-Clone the repo.
-
-Note venv (virtual environment) is used to ensure that versions etc are specific to this repo.
-
-`python -m venv venv` and
-`pip install --require-hashes -r requirements-dev.lock`
-
-To activate:
-`source venv/bin/activate`
-
-To deactivate:
-`deactivate`
-
-### Testing
-
-Create an .env:
-
-```
-OPENAI_API_KEY=token_here
-GITHUB_TOKEN=token_here
-GITLAB_TOKEN=your_gitlab_token_here
+```sh
+python -m venv venv
+source venv/bin/activate
+pip install --require-hashes -r requirements-dev.lock
+python -m pytest -m "not integration"
 ```
 
-And then run:
+When dependencies change, regenerate `requirements.lock` and
+`requirements-dev.lock` with the commands documented in [RELEASING.md](RELEASING.md).
 
-`PYTHONPATH=src pytest -s tests/`
+## Licence and contributions
 
-When changing dependencies, update `requirements.txt` or `requirements-dev.txt` and regenerate the lock files with:
+Cody is **source-available and free to use**, but it is not OSI open source. The current
+licence permits personal, internal business, and commercial use while restricting
+redistribution. See [LICENSE.md](LICENSE.md).
 
-`uv pip compile --python-version 3.13 --generate-hashes --no-header requirements.txt -o requirements.lock`
-
-`uv pip compile --python-version 3.13 --generate-hashes --no-header requirements-dev.txt -o requirements-dev.lock`
-
-## License
-
-See [LICENSE.md](LICENSE.md) for details.
-
-## Contributing
-
-Contributions are welcome! Whether it's submitting issues, suggesting improvements, or contributing code, we appreciate your input.
-
-Please note that while this project is currently open for contributions, it is not open source. There may be an enterprise plan available in the future that will include additional features and support.
-
-Feel free to reach out by [opening an issue](https://github.com/codylabs/cody-code-reviewer/issues) if you have any questions or ideas.
+Bug reports and focused improvements are welcome. Read
+[CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.

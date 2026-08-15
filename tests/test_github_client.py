@@ -3,9 +3,15 @@ import logging
 from datetime import datetime, timezone
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
+from github.GithubException import GithubException
 
 import src.github_client as github_client
-from src.github_client import get_pull_request_context, get_pull_request_data, post_issue_comment
+from src.github_client import (
+    get_pull_request_context,
+    get_pull_request_data,
+    path_is_excluded,
+    post_issue_comment,
+)
 from src.model import query_openai
 
 # Configure logging
@@ -29,6 +35,7 @@ def test_files_without_textual_patches_are_omitted(monkeypatch):
         created_at=now,
         updated_at=now,
         head=SimpleNamespace(sha="abc123"),
+        base=SimpleNamespace(sha="base-sha"),
         get_files=lambda: [
             SimpleNamespace(filename="screenshot.png", patch=None),
             SimpleNamespace(filename="src/app.py", patch="@@ -1 +1 @@"),
@@ -36,7 +43,9 @@ def test_files_without_textual_patches_are_omitted(monkeypatch):
     )
 
     with patch("src.github_client.Github") as github_cls:
-        github_cls.return_value.get_repo.return_value.get_pull.return_value = pull_request
+        repo = github_cls.return_value.get_repo.return_value
+        repo.get_pull.return_value = pull_request
+        repo.get_contents.side_effect = GithubException(status=404, data={}, headers={})
 
         result = get_pull_request_data("codylabs/cody-code-reviewer", 14)
 
@@ -58,13 +67,16 @@ def test_pull_request_payload_is_bounded(monkeypatch):
         created_at=now,
         updated_at=now,
         head=SimpleNamespace(sha="def456"),
+        base=SimpleNamespace(sha="base-sha"),
         get_files=lambda: [
             SimpleNamespace(filename="src/app.py", patch="x" * 100),
         ],
     )
 
     with patch("src.github_client.Github") as github_cls:
-        github_cls.return_value.get_repo.return_value.get_pull.return_value = pull_request
+        repo = github_cls.return_value.get_repo.return_value
+        repo.get_pull.return_value = pull_request
+        repo.get_contents.side_effect = GithubException(status=404, data={}, headers={})
 
         result = get_pull_request_data("codylabs/cody-code-reviewer", 14)
 
@@ -118,6 +130,134 @@ def test_post_issue_comment_posts_the_given_body(monkeypatch):
         post_issue_comment("codylabs/cody-code-reviewer", 14, "Cap reached")
 
         pull_request.create_issue_comment.assert_called_once_with("Cap reached")
+
+
+def test_excluded_paths_are_not_sent_to_the_model(monkeypatch):
+    monkeypatch.setattr(github_client.config, "GITHUB_TOKEN", "token")
+    monkeypatch.setenv("EXCLUDE_PATHS", "generated/**,**/*.min.js")
+    monkeypatch.setenv("CONTEXT_FILES", "")
+    now = datetime.now(timezone.utc)
+    pull_request = SimpleNamespace(
+        title="Update generated assets",
+        body="",
+        state="open",
+        created_at=now,
+        updated_at=now,
+        head=SimpleNamespace(sha="head-sha"),
+        base=SimpleNamespace(sha="base-sha"),
+        get_files=lambda: [
+            SimpleNamespace(filename="generated/client.py", patch="generated patch"),
+            SimpleNamespace(filename="web/app.min.js", patch="minified patch"),
+            SimpleNamespace(filename="src/app.py", patch="reviewable patch"),
+        ],
+    )
+
+    with patch("src.github_client.Github") as github_cls:
+        repo = github_cls.return_value.get_repo.return_value
+        repo.get_pull.return_value = pull_request
+        result = get_pull_request_data("codylabs/cody-code-reviewer", 14)
+
+    assert "reviewable patch" in result.diff
+    assert "generated patch" not in result.diff
+    assert "minified patch" not in result.diff
+    assert "generated/client.py" in result.diff
+    assert "web/app.min.js" in result.diff
+
+
+def test_pull_request_with_only_excluded_files_is_not_an_action_failure(monkeypatch):
+    monkeypatch.setattr(github_client.config, "GITHUB_TOKEN", "token")
+    monkeypatch.setenv("EXCLUDE_PATHS", "generated/**")
+    monkeypatch.setenv("CONTEXT_FILES", "")
+    now = datetime.now(timezone.utc)
+    pull_request = SimpleNamespace(
+        title="Regenerate client",
+        body="",
+        state="open",
+        created_at=now,
+        updated_at=now,
+        head=SimpleNamespace(sha="head-sha"),
+        base=SimpleNamespace(sha="base-sha"),
+        get_files=lambda: [
+            SimpleNamespace(filename="generated/client.py", patch="generated patch"),
+        ],
+    )
+
+    with patch("src.github_client.Github") as github_cls:
+        repo = github_cls.return_value.get_repo.return_value
+        repo.get_pull.return_value = pull_request
+        result = get_pull_request_data("codylabs/cody-code-reviewer", 14)
+
+    assert "generated patch" not in result.diff
+    assert "Files excluded by review configuration" in result.diff
+    assert "generated/client.py" in result.diff
+
+
+def test_context_is_read_from_trusted_base_commit(monkeypatch):
+    monkeypatch.setattr(github_client.config, "GITHUB_TOKEN", "token")
+    monkeypatch.setenv("CONTEXT_FILES", "AGENTS.md")
+    now = datetime.now(timezone.utc)
+    pull_request = SimpleNamespace(
+        title="Feature",
+        body="",
+        state="open",
+        created_at=now,
+        updated_at=now,
+        head=SimpleNamespace(sha="head-sha"),
+        base=SimpleNamespace(sha="trusted-base"),
+        get_files=lambda: [
+            SimpleNamespace(filename="src/app.py", patch="reviewable patch"),
+        ],
+    )
+    content = SimpleNamespace(decoded_content=b"Focus on authorization boundaries.")
+
+    with patch("src.github_client.Github") as github_cls:
+        repo = github_cls.return_value.get_repo.return_value
+        repo.get_pull.return_value = pull_request
+        repo.get_contents.return_value = content
+        result = get_pull_request_data("codylabs/cody-code-reviewer", 14)
+
+    repo.get_contents.assert_called_once_with("AGENTS.md", ref="trusted-base")
+    assert "Focus on authorization boundaries." in result.context
+
+
+def test_path_exclusions_use_glob_patterns():
+    patterns = ("generated/**", "**/*.min.js")
+    assert path_is_excluded("generated/client.py", patterns)
+    assert path_is_excluded("web/app.min.js", patterns)
+    assert not path_is_excluded("src/app.py", patterns)
+
+
+def test_single_star_does_not_cross_directories():
+    patterns = ("src/*",)
+    assert path_is_excluded("src/app.py", patterns)
+    assert not path_is_excluded("src/generated/client.py", patterns)
+    assert not path_is_excluded("a/src/app.py", patterns)
+
+
+def test_double_star_excludes_files_nested_more_than_one_level_deep():
+    # Regression test: PurePosixPath.match() treats '**' as a plain '*',
+    # so it only ever excluded direct children of node_modules and silently
+    # let everything nested deeper through review.
+    patterns = ("node_modules/**",)
+    assert path_is_excluded("node_modules/lodash/index.js", patterns)
+    assert path_is_excluded("node_modules/a/b/c.js", patterns)
+
+
+def test_leading_double_star_also_matches_zero_directories():
+    patterns = ("**/node_modules/**",)
+    assert path_is_excluded("a/b/node_modules/x.js", patterns)
+    assert path_is_excluded("node_modules/x.js", patterns)
+
+
+def test_leading_double_star_matches_root_level_files():
+    patterns = ("**/*.min.js",)
+    assert path_is_excluded("web/app.min.js", patterns)
+    assert path_is_excluded("app.min.js", patterns)
+
+
+def test_trailing_double_star_does_not_match_an_unrelated_prefix():
+    patterns = ("dist/**",)
+    assert not path_is_excluded("src/dist_utils.py", patterns)
 
 
 # This test should be run sparingly due to its impact on API rate limits and potential costs.
