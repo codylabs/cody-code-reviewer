@@ -10,7 +10,7 @@ product and link here instead of copying workflow YAML or model tables.
 | [GitHub Marketplace](https://github.com/marketplace/actions/cody-ai-code-reviewer) | Discoverability and the latest published release |
 | [Cody documentation](https://docs.codylabs.uk/) | Product overview, privacy, and links to GitHub setup |
 | [Cody Labs product page](https://codylabs.uk/private-ai-pr-reviewer/) | Positioning, real-review proof, privacy, terms, and high-intent guides |
-| [Cody Pro on Gumroad](https://codylabs.gumroad.com/l/cody-pro) | GitLab/Azure DevOps sales page; detailed setup ships with the product |
+| [Cody Pro on Polar](https://buy.polar.sh/polar_cl_1Gr4pDASt4UEK22UzlIFz5lruoxKEuG99gtL844iydI) | GitLab/Azure DevOps sales page; detailed setup ships with the product |
 
 ## Release checklist
 

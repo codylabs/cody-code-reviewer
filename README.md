@@ -179,9 +179,9 @@ See [SECURITY.md](SECURITY.md) for reporting and supported-version details.
 
 ## GitLab and Azure DevOps
 
-[Cody Pro](https://codylabs.gumroad.com/l/cody-pro) packages the same private, BYOK
-workflow for GitLab merge requests and Azure DevOps pull requests. It is a one-time
-US$39 purchase, not a subscription.
+[Cody Pro](https://buy.polar.sh/polar_cl_1Gr4pDASt4UEK22UzlIFz5lruoxKEuG99gtL844iydI) packages
+the same private, BYOK workflow for GitLab merge requests and Azure DevOps pull requests. It is
+a one-time US$39 purchase, not a subscription.
 
 ## Development
 
