@@ -179,7 +179,7 @@ See [SECURITY.md](SECURITY.md) for reporting and supported-version details.
 
 ## GitLab and Azure DevOps
 
-[Cody Pro](https://buy.polar.sh/polar_cl_1Gr4pDASt4UEK22UzlIFz5lruoxKEuG99gtL844iydI) packages
+[Cody Pro](https://buy.polar.sh/polar_cl_W4b0Q17WmOuaYMK74997DoQmQa7P8K7o0jppV18t1f0) packages
 the same private, BYOK workflow for GitLab merge requests and Azure DevOps pull requests. It is
 a one-time US$39 purchase, not a subscription.
 

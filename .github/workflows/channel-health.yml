@@ -22,11 +22,28 @@ jobs:
             "https://github.com/codylabs/cody-code-reviewer#install" \
             "https://github.com/marketplace/actions/cody-ai-code-reviewer" \
             "https://docs.codylabs.uk/" \
-            "https://codylabs.uk/" \
-            "https://buy.polar.sh/polar_cl_1Gr4pDASt4UEK22UzlIFz5lruoxKEuG99gtL844iydI"; do
+            "https://codylabs.uk/"; do
             curl --fail --location --retry 3 --connect-timeout 10 --max-time 60 \
               --silent --show-error --output /dev/null "$url"
           done
+
+          # The checkout link needs a stronger assertion than "some page loaded".
+          # A dead Polar checkout link 302s to the bare https://polar.sh/ homepage,
+          # which returns 200, so `curl --fail --location` passes on a link nobody
+          # can buy through. That is not hypothetical: this check was green for
+          # months while Cody Pro could not be purchased at all. Assert the final
+          # URL is an actual checkout page instead.
+          checkout_url="https://buy.polar.sh/polar_cl_W4b0Q17WmOuaYMK74997DoQmQa7P8K7o0jppV18t1f0"
+          final_url="$(curl --location --retry 3 --connect-timeout 10 --max-time 60 \
+            --silent --show-error --output /dev/null --write-out '%{url_effective}' "$checkout_url")"
+          case "$final_url" in
+            https://polar.sh/checkout/*) ;;
+            *)
+              echo "Cody Pro checkout link is dead: $checkout_url landed on $final_url" >&2
+              echo "A working link resolves to https://polar.sh/checkout/..." >&2
+              exit 1
+              ;;
+          esac
 
           readme="$(curl --fail --location --retry 3 --connect-timeout 10 --max-time 60 \
             --silent --show-error \
