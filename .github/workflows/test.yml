@@ -1,9 +1,11 @@
 name: Test
 
+# Push trigger removed 2026-08-26: this runs the identical test job as the
+# pull_request trigger, so every merge to master ran it twice for no extra
+# signal. The PR run already covers it. Kept push out to preserve the free
+# GitHub Actions allowance.
 on:
   pull_request:
-  push:
-    branches: [master]
 
 permissions:
   contents: read
