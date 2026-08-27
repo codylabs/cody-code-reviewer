@@ -34,7 +34,7 @@ The GitLab and Azure DevOps products do NOT consume this action; behavior fixes 
 usually need porting there:
 
 - [ ] `codylabs/cody-pro` (GitLab MR + Azure DevOps scripts, Python, sold via Polar, one-time
-      US$39: https://buy.polar.sh/polar_cl_1Gr4pDASt4UEK22UzlIFz5lruoxKEuG99gtL844iydI):
+      US$39: https://buy.polar.sh/polar_cl_W4b0Q17WmOuaYMK74997DoQmQa7P8K7o0jppV18t1f0):
       active branch is `feat/azure-marketplace-extension`, not main. Port prompt/header/
       output-format changes; its customers install by script, so README + Polar listing
       copy may also need the same doc updates.
