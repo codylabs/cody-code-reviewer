@@ -1,11 +1,20 @@
 name: Test
 
-# Push trigger removed 2026-08-26: this runs the identical test job as the
-# pull_request trigger, so every merge to master ran it twice for no extra
-# signal. The PR run already covers it. Kept push out to preserve the free
-# GitHub Actions allowance.
+# The push trigger was removed 2026-08-26 to preserve the free GitHub Actions
+# allowance, since it ran the identical job as the pull_request trigger and
+# every merge cost two runs. Cody's review of PR #37 pushed back, correctly:
+# unlike the sibling repos this one has NO pre-commit hook, so with push gone a
+# direct push to master, or any merge made outside a pull request, would have
+# had no test gate anywhere, local or remote.
+#
+# Restored, but narrowed to master only rather than all branches. Feature-branch
+# pushes are still covered by the pull_request run alone, which is where the
+# duplication actually was. This costs one short run per merge on one repo,
+# which is the right trade against having no gate on the product's own code.
 on:
   pull_request:
+  push:
+    branches: [master]
 
 permissions:
   contents: read
