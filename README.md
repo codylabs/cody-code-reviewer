@@ -1,7 +1,11 @@
 # Private AI PR Reviewer by Cody Labs
 
-High-signal pull request reviews using your choice of OpenAI or Anthropic model.
-Cody runs inside your GitHub Actions job and sends the diff directly to the model
+Cody reviews GitHub pull requests with an OpenAI or Anthropic model of your choice, then
+posts the findings as a single comment on the pull request. It is free: you bring your own
+API key and pay only your provider's usage cost. Install takes under a minute: add one
+secret and one workflow file.
+
+Cody runs inside your own GitHub Actions job and sends the diff directly to the model
 provider using your API key. The inspected, unmodified Action contains no Cody Labs
 review-service integration, account requirement, or per-seat subscription. Like any
 third-party Action, its code and installed dependencies run with access to the
@@ -28,6 +32,38 @@ This project dogfoods its own Action. In
 [this real review](https://github.com/codylabs/cody-code-reviewer/pull/24#issuecomment-5157065670),
 Cody caught a workflow change that could have exposed repository secrets to
 pull-request-controlled code.
+
+## What a review looks like
+
+This is an unedited comment Cody posted on [this repository's own pull request
+#37](https://github.com/codylabs/cody-code-reviewer/pull/37#issuecomment-5422543846):
+
+> AI Code Review by Cody (https://docs.codylabs.uk/) · Model: `gpt-5.6-luna`
+>
+> ## Summary of Change
+>
+> - Replaced the obsolete Polar checkout URL in `README.md`, `CHANNELS.md`, and `RELEASING.md`.
+> - Added a checkout health check that follows redirects and validates the final URL.
+> - Added a `$39` text check against the checkout response.
+> - Restored `push` testing for the `master` branch.
+>
+> ## Code Review
+>
+> - **Severity: Medium** — `.github/workflows/channel-health.yml` — `grep -q '\$39'` checkout
+>   validation
+>   The price assertion searches the entire HTML response for arbitrary text. It can produce
+>   false positives if `$39` appears in unrelated content, and false negatives if Polar changes
+>   formatting, localization, or renders the price dynamically. It also does not prove that the
+>   displayed `$39` is the amount associated with this product or the amount actually charged.
+>   **Smallest safe fix:** validate a stable, product-specific structured value (such as Polar's
+>   supported API/JSON-LD price field) and assert the exact currency and amount. If no stable
+>   machine-readable field is available, retain the URL/HTTP validation and remove this brittle
+>   body-text assertion rather than making the workflow depend on page markup.
+>
+> No other actionable issues were identified in the supplied diff.
+
+A push-round marker is embedded in the comment as an HTML comment so Cody can find and update
+its own review later; GitHub does not render it, so it does not show up above.
 
 ## Install
 
@@ -179,9 +215,9 @@ See [SECURITY.md](SECURITY.md) for reporting and supported-version details.
 
 ## GitLab and Azure DevOps
 
-[Cody Pro](https://buy.polar.sh/polar_cl_W4b0Q17WmOuaYMK74997DoQmQa7P8K7o0jppV18t1f0) packages
-the same private, BYOK workflow for GitLab merge requests and Azure DevOps pull requests. It is
-a one-time US$39 purchase, not a subscription.
+This Action covers GitHub pull requests, free. For GitLab merge requests and Azure DevOps pull
+requests, Cody Pro packages the same private, BYOK review as a one-time US$39 purchase, not a
+subscription. Details: [codylabs.uk/private-ai-pr-reviewer](https://codylabs.uk/private-ai-pr-reviewer/).
 
 ## Development
 
